@@ -274,17 +274,18 @@ class TableViewTab(QWidget):
     
     def setup_shortcuts(self):
         """设置键盘快捷键"""
-        # 添加行: Ctrl+A+R
-        QShortcut(QKeySequence("Ctrl+A+R"), self).activated.connect(self.add_row)
+        # TODO:修复快捷键冲突
+        # # 添加行: Ctrl+A+R
+        # QShortcut(QKeySequence("Ctrl+A+R"), self).activated.connect(self.add_row)
         
-        # 删除行: Ctrl+D+R
-        QShortcut(QKeySequence("Ctrl+D+R"), self).activated.connect(self.remove_row)
+        # # 删除行: Ctrl+D+R
+        # QShortcut(QKeySequence("Ctrl+D+R"), self).activated.connect(self.remove_row)
         
-        # 添加列: Ctrl+A+C
-        QShortcut(QKeySequence("Ctrl+A+C"), self).activated.connect(self.add_column)
+        # # 添加列: Ctrl+A+C
+        # QShortcut(QKeySequence("Ctrl+A+C"), self).activated.connect(self.add_column)
         
-        # 删除列: Ctrl+D+C
-        QShortcut(QKeySequence("Ctrl+D+C"), self).activated.connect(self.remove_column)
+        # # 删除列: Ctrl+D+C
+        # QShortcut(QKeySequence("Ctrl+D+C"), self).activated.connect(self.remove_column)
 
         # 全选: Ctrl+A
         QShortcut(QKeySequence("Ctrl+A"), self).activated.connect(self.select_all)
