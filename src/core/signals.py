@@ -1,0 +1,62 @@
+# src/core/signals.py
+# 全局信号中心类
+
+from PyQt6.QtCore import QObject, pyqtSignal
+
+class ComponentSignals(QObject):
+    """组件间通信的信号类"""
+    container_updated = pyqtSignal(object)  # 容器更新信号 - 参数: 容器对象
+    porperty_panel_changed = pyqtSignal(str)  # 属性面板改变信号 - 参数: 属性面板名称
+    properties_updated = pyqtSignal(dict)    # 属性更新信号 - 参数: 属性字典
+    plot_updated = pyqtSignal(dict)          # 绘图更新信号 - 参数: 绘图字典
+
+class ContainerSignals(QObject):
+    """数据容器通信的信号类"""
+    container_created = pyqtSignal()        # 数据容器创建信号 - 参数: 无
+    container_ready = pyqtSignal(object)    # 数据容器准备就绪信号 - 参数: 数据容器对象
+    container_updated = pyqtSignal(object)  # 数据容器更新信号 - 参数: 数据容器对象
+    container_deleted = pyqtSignal(object)  # 数据容器删除信号 - 参数: 数据容器对象
+
+    _current_container = None
+    
+    def set_current_container(self, container):
+        self._current_container = container
+    
+    def get_current_container(self):
+        return self._current_container
+
+class TabSignals(QObject):
+    """标签页通信的信号类"""
+    # 表格标签信号
+    table_tab_created = pyqtSignal(str, str)  # (uuid, 名称)
+    table_tab_closed = pyqtSignal(str)        # 关闭的标签页UUID
+    activate_table_tab = pyqtSignal(str)      # 请求激活的表格标签页UUID
+
+    # 缩略图标签信号
+    thumbnnail_clicked = pyqtSignal(str)      # 缩略图点击信号 - 参数: 缩略图UUID
+    thumbnnail_closed = pyqtSignal(str)       # 关闭的标签页UUID
+
+class DataSignals(QObject):
+    """数据通信的信号类"""
+    data_modified = pyqtSignal(object, list)  # 数据修改信号 - 参数: 数据对象,列标题
+
+class PlotSignals(QObject):
+    """绘图通信的信号类"""
+    
+    chart_window_requested = pyqtSignal(object, str, dict)  # 创建窗口请求信号 - 参数：容器、图表类型、选项
+
+# 创建全局唯一实例
+# 信号中心类实例
+component_signals = ComponentSignals()
+
+# 数据容器通信的信号中心类实例
+container_signals = ContainerSignals()
+
+# 标签页通信的信号中心类实例
+tab_signals = TabSignals()
+
+# 数据通信的信号中心类实例
+data_signals = DataSignals()
+
+# 绘图通信的信号中心类实例
+plot_signals = PlotSignals()
