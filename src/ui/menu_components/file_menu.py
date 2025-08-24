@@ -53,7 +53,7 @@ class FileMenu(QMenu):
             parent = self, 
             caption = "打开文件", 
             directory = "", 
-            filter = "csv文件(*.csv);;xlsx文件(*.xlsx);;json文件(*.json)"
+            filter = "csv文件(*.csv);;xlsx文件(*.xlsx, *.xls);;json文件(*.json)"
         )
 
         if file_path:

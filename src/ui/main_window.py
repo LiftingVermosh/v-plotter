@@ -23,7 +23,11 @@ class MainWindow(QMainWindow):
         self.data_containers = []
         self.current_container = None
         
-        self.init_ui()
+        self.init_data_containers()  # 初始化数据容器
+
+        self.init_settings_manager()  # 初始化设置管理器
+
+        self.init_ui()  # 初始化界面
                 
         # 设置全局默认背景和前景颜色
         pg.setConfigOption('background', 'w')  # 白色背景
@@ -76,16 +80,35 @@ class MainWindow(QMainWindow):
         main_layout.addWidget(main_splitter)
         main_layout.setContentsMargins(5, 5, 5, 5)
 
-    def apply_settings(self, settings):
-        """应用设置"""
-        self.settings = settings
-        # 保存设置
-        self.settings_manager.save_settings(settings)
+    def init_settings_manager(self):
+        # 初始化设置管理器
+        self.settings_manager = SettingsManager()
+        self.settings = self.settings_manager.load_settings()
         
-        # 应用数据界面设置
+        # 使用设置中的默认尺寸
+        default_width = self.settings.get("data_interface", {}).get("default_width", 1200)
+        default_height = self.settings.get("data_interface", {}).get("default_height", 800)
+        self.resize(default_width, default_height)
+        
+    def init_data_containers(self):
+        """初始化数据容器"""
+        self.data_containers = []
+        self.current_container = None
+
+    def update_all_components_with_settings(self, settings):
+        """使用新设置更新所有组件"""
+        self.settings = settings
+        
+        # 更新数据界面设置
+        data_interface = settings.get("data_interface", {})
         if hasattr(self, 'plot_area'):
             # 更新表格视图的设置
             pass
+        
+        # 可以添加其他组件的更新逻辑
+        
+        # 保存设置
+        self.settings_manager.save_settings(settings)
 
     def showEvent(self, event):
         """窗口显示后调整分割器比例"""

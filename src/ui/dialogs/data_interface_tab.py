@@ -74,3 +74,16 @@ class DataInterfaceTab(QWidget):
             "default_column_count": self.default_column_count.value(),
             "column_naming": self.column_naming.currentText()
         }
+
+    def load_settings(self, settings):
+        """加载数据界面设置"""
+        self.show_row_numbers.setChecked(settings.get("show_row_numbers", True))
+        self.show_grid.setChecked(settings.get("show_grid", True))
+        self.auto_resize_columns.setChecked(settings.get("auto_resize_columns", True))
+        self.default_row_count.setValue(settings.get("default_row_count", 10))
+        self.default_column_count.setValue(settings.get("default_column_count", 3))
+        
+        column_naming = settings.get("column_naming", "列1, 列2, ...")
+        index = self.column_naming.findText(column_naming)
+        if index >= 0:
+            self.column_naming.setCurrentIndex(index)

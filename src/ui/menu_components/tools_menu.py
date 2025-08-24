@@ -5,7 +5,6 @@ from PyQt6.QtWidgets import QMenu, QMessageBox
 from PyQt6.QtGui import QIcon, QAction
 from src.core.signals import plot_signals
 from src.ui.chart_windows import ChartWindow
-from src.ui.dialogs.font_config_dialog import FontConfigDialog
 from src.ui.dialogs.preferences_dialog import PreferencesDialog
 
 class ToolsMenu(QMenu):
@@ -24,10 +23,6 @@ class ToolsMenu(QMenu):
         
         # 计算器
         self.calculator_action = self.addAction("&计算器")
-        self.addSeparator()
-
-        # 字体配置
-        self.font_config_action = self.addAction("&字体配置...")
         self.addSeparator()
         
         # 外部工具
@@ -79,23 +74,25 @@ class ToolsMenu(QMenu):
     def open_preferences(self):
         """打开偏好设置"""
         dialog = PreferencesDialog(self.main_window)
+        # 连接设置更改信号
+        dialog.settings_changed.connect(self.apply_preferences)
         if dialog.exec() == PreferencesDialog.DialogCode.Accepted:
-            settings = dialog.get_settings()
-            # 保存设置到配置文件或应用设置
-            self.apply_preferences(settings)
+            # 设置已在accept方法中保存和应用
+            pass
     
     def apply_preferences(self, settings):
         """应用偏好设置"""
         # 这里可以实现设置的应用逻辑
         print("应用偏好设置:", settings)
-        # 例如，可以更新数据界面设置
-        if hasattr(self.main_window, 'plot_area'):
-            plot_area = self.main_window.plot_area
-            # 更新表格视图的设置
-            # ...
         
-        # 可以保存设置到配置文件
-        self.save_preferences(settings)
+        # 更新主窗口中的设置
+        if hasattr(self.main_window, 'settings'):
+            self.main_window.settings = settings
+        
+        # 可以通知其他组件设置已更改
+        if hasattr(self.main_window, 'update_all_components_with_settings'):
+            self.main_window.update_all_components_with_settings(settings)
+    
     
     def save_preferences(self, settings):
         """保存偏好设置到配置文件"""
@@ -154,8 +151,3 @@ class ToolsMenu(QMenu):
         """显示更多图表选项"""
         # 实现更多图表选项的逻辑
         pass
-
-    def open_font_config(self):
-        """打开字体配置对话框"""
-        dialog = FontConfigDialog(self.main_window)
-        dialog.exec()

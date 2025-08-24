@@ -229,16 +229,16 @@ class TableViewTab(QWidget):
         button_layout = QHBoxLayout()
         
         # 行列操作按钮
-        self.add_row_btn = QPushButton("添加行")
+        self.add_row_btn = QPushButton("添加行 (Ctrl+Shift+R)")
         self.add_row_btn.clicked.connect(self.add_row)
         
-        self.remove_row_btn = QPushButton("删除行")
+        self.remove_row_btn = QPushButton("删除行 (Ctrl+Shift+D)")
         self.remove_row_btn.clicked.connect(self.remove_row)
 
-        self.add_col_btn = QPushButton("添加列")
+        self.add_col_btn = QPushButton("添加列(Ctrl+Shift+C)")
         self.add_col_btn.clicked.connect(self.add_column)
 
-        self.remove_col_btn = QPushButton("删除列")
+        self.remove_col_btn = QPushButton("删除列(Ctrl+Shift+X)")
         self.remove_col_btn.clicked.connect(self.remove_column)
 
         button_layout.addWidget(self.add_row_btn)
@@ -274,18 +274,17 @@ class TableViewTab(QWidget):
     
     def setup_shortcuts(self):
         """设置键盘快捷键"""
-        # TODO:修复快捷键冲突
-        # # 添加行: Ctrl+A+R
-        # QShortcut(QKeySequence("Ctrl+A+R"), self).activated.connect(self.add_row)
+        # 添加行: Ctrl+Shift+R
+        QShortcut(QKeySequence("Ctrl+Shift+R"), self).activated.connect(self.add_row)
         
-        # # 删除行: Ctrl+D+R
-        # QShortcut(QKeySequence("Ctrl+D+R"), self).activated.connect(self.remove_row)
+        # 删除行: Ctrl+Shift+D
+        QShortcut(QKeySequence("Ctrl+Shift+D"), self).activated.connect(self.remove_row)
         
-        # # 添加列: Ctrl+A+C
-        # QShortcut(QKeySequence("Ctrl+A+C"), self).activated.connect(self.add_column)
+        # 添加列: Ctrl+Shift+C
+        QShortcut(QKeySequence("Ctrl+Shift+C"), self).activated.connect(self.add_column)
         
-        # # 删除列: Ctrl+D+C
-        # QShortcut(QKeySequence("Ctrl+D+C"), self).activated.connect(self.remove_column)
+        # 删除列: Ctrl+Shift+X
+        QShortcut(QKeySequence("Ctrl+Shift+X"), self).activated.connect(self.remove_column)
 
         # 全选: Ctrl+A
         QShortcut(QKeySequence("Ctrl+A"), self).activated.connect(self.select_all)
@@ -295,6 +294,12 @@ class TableViewTab(QWidget):
 
         # 清除内容: Del
         QShortcut(QKeySequence("Del"), self).activated.connect(self.clear_insertion)
+        
+        # 复制: Ctrl+C
+        QShortcut(QKeySequence("Ctrl+C"), self).activated.connect(self.copy_selection)
+
+        # 粘贴: Ctrl+V
+        QShortcut(QKeySequence("Ctrl+V"), self).activated.connect(self.paste_to_selection)
     
     def load_data(self):
         """从容器加载数据，支持混合类型"""

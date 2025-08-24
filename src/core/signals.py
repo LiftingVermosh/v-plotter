@@ -45,6 +45,10 @@ class PlotSignals(QObject):
     
     chart_window_requested = pyqtSignal(object, str, dict)  # 创建窗口请求信号 - 参数：容器、图表类型、选项
 
+class SettingsSignals(QObject):
+    """设置通信的信号类"""
+    settings_changed = pyqtSignal(dict)  # 设置改变信号 - 参数: 设置字典
+
 # 创建全局唯一实例
 # 信号中心类实例
 component_signals = ComponentSignals()
@@ -60,3 +64,6 @@ data_signals = DataSignals()
 
 # 绘图通信的信号中心类实例
 plot_signals = PlotSignals()
+
+# 设置通信的信号中心类实例
+settings_signals = SettingsSignals()

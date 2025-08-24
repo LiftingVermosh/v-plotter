@@ -1,78 +1,83 @@
 # src/core/settings_manager.py
 import json
 import os
-from PyQt6.QtCore import QSettings
+from pathlib import Path
+import matplotlib.pyplot as plt
 
 class SettingsManager:
     def __init__(self):
-        self.settings = QSettings("YourCompany", "V-Plotter")
-        # 或者使用JSON文件
-        # self.config_file = os.path.expanduser("~/.vplotter/config.json")
-        # self.load_settings()
+        # 设置配置文件路径
+        self.config_dir = Path.home() / ".vplotter"
+        self.config_file = self.config_dir / "config.json"
+        # 确保配置目录存在
+        self.config_dir.mkdir(parents=True, exist_ok=True)
     
     def load_settings(self):
-        """加载设置"""
-        # 使用QSettings
-        return {
-            "data_interface": {
-                "show_row_numbers": self.settings.value("data_interface/show_row_numbers", True, type=bool),
-                "show_grid": self.settings.value("data_interface/show_grid", True, type=bool),
-                # ... 其他设置
-            },
-            "plot_settings": {
-                "default_chart_type": self.settings.value("plot_settings/default_chart_type", "折线图"),
-                # ... 其他设置
-            }
-        }
-    
-    def save_settings(self, settings):
-        """保存设置"""
-        # 使用QSettings
-        data_interface = settings.get("data_interface", {})
-        plot_settings = settings.get("plot_settings", {})
-        
-        self.settings.setValue("data_interface/show_row_numbers", data_interface.get("show_row_numbers", True))
-        self.settings.setValue("data_interface/show_grid", data_interface.get("show_grid", True))
-        
-        self.settings.setValue("plot_settings/default_chart_type", plot_settings.get("default_chart_type", "折线图"))
-        
-        # 同步设置
-        self.settings.sync()
-    
-    # 使用JSON文件的替代方案
-    def load_settings_json(self):
-        """从JSON文件加载设置"""
-        if os.path.exists(self.config_file):
+        """从JSON文件加载设置，提供默认值"""
+        if self.config_file.exists():
             try:
-                with open(self.config_file, 'r') as f:
-                    return json.load(f)
-            except:
+                with open(self.config_file, 'r', encoding='utf-8') as f:
+                    loaded_settings = json.load(f)
+                    # 合并加载的设置和默认设置，确保所有设置项都存在
+                    return self._merge_with_defaults(loaded_settings)
+            except (json.JSONDecodeError, IOError):
                 return self.get_default_settings()
         return self.get_default_settings()
     
-    def save_settings_json(self, settings):
+    def save_settings(self, settings):
         """保存设置到JSON文件"""
-        os.makedirs(os.path.dirname(self.config_file), exist_ok=True)
-        with open(self.config_file, 'w') as f:
-            json.dump(settings, f, indent=4)
+        try:
+            with open(self.config_file, 'w', encoding='utf-8') as f:
+                json.dump(settings, f, indent=4, ensure_ascii=False)
+            return True
+        except IOError:
+            return False
+    
+    def _merge_with_defaults(self, loaded_settings):
+        """将加载的设置与默认设置合并"""
+        defaults = self.get_default_settings()
+        
+        # 深度合并字典
+        def deep_merge(source, destination):
+            for key, value in source.items():
+                if key in destination:
+                    if isinstance(value, dict) and isinstance(destination[key], dict):
+                        deep_merge(value, destination[key])
+                    else:
+                        destination[key] = value
+                else:
+                    destination[key] = value
+            return destination
+        
+        return deep_merge(loaded_settings, defaults.copy())
     
     def get_default_settings(self):
         """获取默认设置"""
+        # 获取当前Matplotlib默认字体
+        default_font = plt.rcParams['font.sans-serif'][0] if plt.rcParams['font.sans-serif'] else "SimHei"
+        
         return {
             "data_interface": {
-                "show_row_numbers": True,
-                "show_grid": True,
-                "auto_resize_columns": True,
-                "default_row_count": 10,
-                "default_column_count": 3,
-                "column_naming": "列1, 列2, ..."
+                "show_row_numbers": True,           # 是否显示行号
+                "show_grid": True,                  # 是否显示网格
+                "auto_resize_columns": True,        # 是否自动调整列宽
+                "default_row_count": 10,            # 默认行数
+                "default_column_count": 3,          # 默认列数
+                "column_naming": "列1, 列2, ..."    # 列命名格式
             },
             "plot_settings": {
-                "default_chart_type": "折线图",
-                "default_theme": "默认",
-                "default_width": 800,
-                "default_height": 600,
-                "bg_color": "#ffffff",
-                "grid_color": "#c8c8c8"
+                "default_chart_type": "折线图",     # 默认图表类型
+                "default_theme": "默认",            # 默认主题
+                "default_width": 800,               # 默认宽度  
+                "default_height": 600,              # 默认高度
+                "bg_color": "#ffffff",              # 背景颜色
+                "grid_color": "#c8c8c8",            # 网格颜色
+                "font_family": default_font,        # 字体族
+                "label_size": 12,                   # 标签字号
+                "tick_size": 10,                    # 刻度字号
+                "title_size": 14,                   # 标题字号
+                "line_width": 2.0,                  # 线条宽度
+                "border_width": 1.0,                # 边框宽度
+                "marker_size": 5.0                  # 标记大小
             }
         }

@@ -1,16 +1,26 @@
 # src/core/font_manager.py
-
 from PyQt6.QtWidgets import QMessageBox
 import matplotlib.pyplot as plt
 from matplotlib import font_manager as fm
 import os
 import platform
+from src.core.settings_manager import SettingsManager
 
-def setup_chinese_font():
+def setup_chinese_font(settings=None):
     """
     设置Matplotlib支持中文显示
+    参数: settings - 可选的设置字典，如果提供则使用其中的字体设置
     返回: 成功设置的字体系列名称
     """
+    # 如果提供了设置，优先使用设置中的字体
+    if settings and 'plot_settings' in settings:
+        font_family = settings['plot_settings'].get('font_family')
+        if font_family and font_family in [f.name for f in fm.fontManager.ttflist]:
+            plt.rcParams['font.sans-serif'] = [font_family] + plt.rcParams['font.sans-serif']
+            plt.rcParams['axes.unicode_minus'] = False
+            return font_family
+    
+    # 如果没有提供设置或设置中的字体不可用，则使用原来的逻辑
     # 确定操作系统
     system = platform.system()
     
@@ -53,7 +63,6 @@ def setup_chinese_font():
         if font_name in available_fonts:
             plt.rcParams['font.sans-serif'] = [font_name] + plt.rcParams['font.sans-serif']
             plt.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题
-            # print(f"已设置中文字体: {font_name}")
             return font_name
     
     # 如果没有找到中文字体，尝试使用字体文件
@@ -132,3 +141,8 @@ def setup_chinese_font_with_file():
 
 # 在模块导入时自动设置中文字体
 chinese_font = setup_chinese_font()
+
+# 在模块导入时自动设置中文字体
+settings_manager = SettingsManager()
+settings = settings_manager.load_settings()
+chinese_font = setup_chinese_font(settings)
