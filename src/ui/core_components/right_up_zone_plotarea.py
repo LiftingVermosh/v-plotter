@@ -32,3 +32,13 @@ class PlotArea(QWidget):
             return current_widget.container
         return None
     
+    def get_current_table_tab(self):
+        """获取当前活动的表格标签页"""
+        current_widget = self.parent_table_tab.currentWidget()
+        # 确保不是欢迎页
+        if current_widget != self.parent_table_tab.welcome_tab:
+            return current_widget
+        else:
+            QMessageBox.warning(self, "警告", "请先创建或打开一个表格文件！")
+            return None
+    

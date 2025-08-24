@@ -170,13 +170,20 @@ class FileMenu(QMenu):
     # 保存当前文件
     def save_file(self):
         # 获取当前活动视图
-        cur_tab = self.get_current_table_tab()
+        if not hasattr(self.main_window, 'plot_area'):
+            QMessageBox.warning(self.main_window, "错误", "\n无法访问绘图区域\t")
+            return
+        
+        # 获取当前数据容器
+        cur_tab = self.main_window.plot_area.get_current_table_tab()
         if cur_tab is None:
             QMessageBox.warning(self.main_window, "错误", "\n当前没有活动的表格视图\t")
             return
         
         # 获取数据容器
         container = cur_tab.container
+        
+        # 如果数据容器没有保存过，则调用另存为
         if container.source == "新建":
             # 无原始路径，调用另存为
             self.save_as()
@@ -186,10 +193,8 @@ class FileMenu(QMenu):
             # 获取当前数据
             data = container.get_table_data_as_numpy()
             headers = container.column_headers
-
             # 根据文件拓展名调用相应的保存函数
             extensions = os.path.splitext(container.source)[1].lower()
-
             if extensions == ".csv":
                 self.save_csv(container.source, data, headers)
             elif extensions == ".xlsx":
@@ -201,11 +206,16 @@ class FileMenu(QMenu):
                 return
         except Exception as e:
             QMessageBox.warning(self.main_window, "错误", f"保存文件失败：{str(e)}\t")
-
+            
     # 另存为
     def save_as(self):
         # 获取当前活动视图
-        cur_tab = self.get_current_table_tab()
+        if not hasattr(self.main_window, 'plot_area'):
+            QMessageBox.warning(self.main_window, "错误", "\n无法访问绘图区域\t")
+            return
+        
+        # 使用正确的方法名
+        cur_tab = self.main_window.plot_area.get_current_table_tab()
         if cur_tab is None:
             QMessageBox.warning(self.main_window, "错误", "当前没有活动的表格视图\t")
             return
@@ -220,7 +230,6 @@ class FileMenu(QMenu):
             directory = container.source if container.source else "", 
             filter = "csv文件(*.csv);;xlsx文件(*.xlsx);;json文件(*.json)"
         )
-
         if not file_path:
             return  # 用户取消操作
         
@@ -228,21 +237,17 @@ class FileMenu(QMenu):
             # 获取当前数据
             data = container.get_table_data_as_numpy()
             headers = container.column_headers
-
             # 根据文件拓展名调用相应的保存函数
             extensions = os.path.splitext(file_path)[1].lower()
-
             if file_path.endswith('.csv') or selected_filter == "CSV文件(*.csv)":
                 self.save_csv(file_path, data, headers)
             elif file_path.endswith('.xlsx') or selected_filter == "Excel文件(*.xlsx)":
                 self.save_excel(file_path, data, headers)
             elif file_path.endswith('.json') or selected_filter == "JSON文件(*.json)":
                 self.save_json(file_path, data, headers)
-
             # 更新容器信息
-            container.data_source = file_path
+            container.source = file_path
             container.name = os.path.split(file_path)[1]
-
             # 通知主窗口更新数据容器
             if self.main_window and hasattr(self.main_window, "plot_area"):
                 table_tab = self.main_window.plot_area.parent_table_tab
@@ -250,7 +255,6 @@ class FileMenu(QMenu):
                     for uuid, info in table_tab.tab_map.items():
                         if info['container'] == container:
                             self.set_tab_name(table_tab, info['index'], container.name)
-
             QMessageBox.information(self.main_window, "提示", "保存成功\t")
         except Exception as e:
             QMessageBox.warning(self.main_window, "错误", f"保存文件失败：{str(e)}\t")
@@ -279,28 +283,12 @@ class FileMenu(QMenu):
 
     # 获取当前活动的表格视图
     def get_current_table_tab(self):
-        """ 获取当前活动的表格视图 """
-        if not self.main_window or not hasattr(self.main_window, "right_up_plot"):
-            # # 调试
-            # print("无法访问主窗口")
+        """获取当前活动的表格视图"""
+        if not self.main_window or not hasattr(self.main_window, "plot_area"):
             return None
         
-        plot_area = self.main_window.right_up_plot
-        if not hasattr(plot_area, "parent_table_tab"):
-            # # 调试
-            # print("无法访问表格视图")
-            return None
-        
-        table_tab = plot_area.parent_table_tab
-        if not table_tab:
-            # # 调试
-            # print("表格视图为空")
-            return None
-        
-        cur_tab = table_tab.currentWidget()
-
-        if isinstance(cur_tab, QWidget) and cur_tab != table_tab.welcome_tab:
-            return cur_tab
+        plot_area = self.main_window.plot_area
+        return plot_area.get_current_table_tab()  # 返回当前活动的表格视图
     
     def set_tab_name(self, tab_widget, index, name):
         """ 设置表格视图的标签名 """
