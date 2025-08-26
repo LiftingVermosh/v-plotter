@@ -1,10 +1,11 @@
 # src/ui/chart_windows.py
 # 这个文件是图表窗口的实现，主要是继承自QDialog，并使用matplotlib绘制图表。
 
-from PyQt6.QtWidgets import QDialog, QVBoxLayout
+from PyQt6.QtWidgets import QDialog, QVBoxLayout, QMessageBox
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
+import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib
 
@@ -91,47 +92,52 @@ class ChartWindow(QDialog):
         # 应用标记点大小设置
         self.marker_size = plot_settings.get("marker_size", 5.0)
         # 在绘图方法中应用标记点大小
-        def draw_chart(self):
-            # 从容器获取数据
-            if self.container is None:
-                return
-            
-            data_array = self.container.get_table_data_as_numpy()
-            headers = self.container.column_headers
-            
-            # 确保数据是二维的
-            if len(data_array.shape) == 1:
-                data_array = data_array.reshape(-1, 1)
-            
-            # 清除旧图形
-            self.figure.clear()
-            
-            ax = self.figure.add_subplot(111)
-            
-            # 应用绘图配置
-            self.apply_draw_config(ax)
-            
-            # 根据图表类型调用不同的绘图方法
-            if self.chart_type == 'bar':
-                self.draw_bar_chart(ax, data_array, headers)
-            elif self.chart_type == 'line':
-                self.draw_line_chart(ax, data_array, headers)
-            elif self.chart_type == 'pie':
-                self.draw_pie_chart(ax, data_array, headers)
-            elif self.chart_type == 'scatter':
-                self.draw_scatter_chart(ax, data_array, headers)
-            # 可以添加更多图表类型
-            else:
-                ax.text(0.5, 0.5, f'不支持的图表类型: {self.chart_type}', 
-                        horizontalalignment='center', 
-                        verticalalignment='center',
-                        transform=ax.transAxes)
-            
-            # 设置标题
-            title = self.options.get('title', f'{self.chart_type} Chart')
-            ax.set_title(title)
-            
-            self.canvas.draw()
+        
+    def draw_chart(self):
+        # 从容器获取数据
+        if self.container is None:
+            return
+        
+        data_array = self.container.get_table_data_as_numpy()
+        headers = self.container.column_headers
+        
+        # 确保数据是二维的
+        if not data_array:
+            QMessageBox.warning(self, "错误", "数据为空！")
+            return
+
+        if len(data_array.shape) == 1:
+            data_array = data_array.reshape(-1, 1)
+        
+        # 清除旧图形
+        self.figure.clear()
+        
+        ax = self.figure.add_subplot(111)
+        
+        # 应用绘图配置
+        self.apply_draw_config(ax)
+        
+        # 根据图表类型调用不同的绘图方法
+        if self.chart_type == 'bar':
+            self.draw_bar_chart(ax, data_array, headers)
+        elif self.chart_type == 'line':
+            self.draw_line_chart(ax, data_array, headers)
+        elif self.chart_type == 'pie':
+            self.draw_pie_chart(ax, data_array, headers)
+        elif self.chart_type == 'scatter':
+            self.draw_scatter_chart(ax, data_array, headers)
+        # 可以添加更多图表类型
+        else:
+            ax.text(0.5, 0.5, f'不支持的图表类型: {self.chart_type}', 
+                    horizontalalignment='center', 
+                    verticalalignment='center',
+                    transform=ax.transAxes)
+        
+        # 设置标题
+        title = self.options.get('title', f'{self.chart_type} Chart')
+        ax.set_title(title)
+        
+        self.canvas.draw()
     
     def draw_line_chart(self, ax, data_array, headers):
         """绘制折线图，应用线宽和标记点大小设置"""

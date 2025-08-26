@@ -74,16 +74,12 @@ class ToolsMenu(QMenu):
     def open_preferences(self):
         """打开偏好设置"""
         dialog = PreferencesDialog(self.main_window)
-        # 连接设置更改信号
         dialog.settings_changed.connect(self.apply_preferences)
-        if dialog.exec() == PreferencesDialog.DialogCode.Accepted:
-            # 设置已在accept方法中保存和应用
-            pass
+        dialog.exec()  # 调用 exec() 方法显示对话框
+
     
     def apply_preferences(self, settings):
         """应用偏好设置"""
-        # 这里可以实现设置的应用逻辑
-        print("应用偏好设置:", settings)
         
         # 更新主窗口中的设置
         if hasattr(self.main_window, 'settings'):
