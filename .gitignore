@@ -14,6 +14,8 @@
 
 # 脚本文件
 !*.py
+!*.json
+!*.qss
 
 # 忽略__pycache__目录
 __pycache__/
