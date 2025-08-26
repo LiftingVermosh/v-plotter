@@ -11,8 +11,8 @@ setup(
         'pandas>=1.0',
         'matplotlib>=3.0',
         'seaborn>=0.11',
-        'openpyxl>=3.0',   # 用于Excel处理
-        'Pillow>=8.0',     # 用于图像预览
+        'openpyxl>=3.0',   
+        'Pillow>=8.0',     
     ],
     extras_require={
         'test': [
