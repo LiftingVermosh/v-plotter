@@ -58,30 +58,42 @@
 v-plotter/
 ├── src/                    # 源代码目录
 │   ├── core/              # 核心功能模块
+│   │   ├── base_theme.py          # 抽象主题基类
 │   │   ├── data_container.py      # 数据容器管理
 │   │   ├── font_manager.py        # 字体管理
 │   │   ├── settings_manager.py    # 设置管理
 │   │   ├── signals.py             # 信号定义
-│   │   └── plot/                  # 绘图相关模块
-│   │       └── figure_config.py   # 图表配置
+│   │   ├── theme_manager.py       # 主题管理
+│   │   └── themes/                # 主题实现目录
+│   │       ├── dark_theme.py      # 深色主题实现
+│   │       └── light_theme.py     # 浅色主题实现
+│   ├── resources/         # 资源文件目录
+│   │   ├── icons/                # 图标资源
+│   │   └── themes/               # 主题资源目录
+│   │       ├── dark/             # 深色主题资源
+│   │       │   ├── styles.qss           # 深色主题样式表
+│   │       │   └── theme.json          # 深色主题配置
+│   │       └── light/            # 浅色主题资源
+│   │           ├── styles.qss          # 浅色主题样式表
+│   │           └── theme.json         # 浅色主题配置
 │   ├── ui/                # 用户界面模块
 │   │   ├── core_components/       # 核心UI组件
 │   │   │   ├── left_zone_data_overview.py     # 左侧数据概览区
-│   │   │   ├── parent_table_tab.py            # 表格父标签页
-│   │   │   ├── right_down_zone_property_panel.py  # 右下属性面板
 │   │   │   ├── right_up_zone_plotarea.py      # 右上绘图区域
 │   │   │   └── table_view_tab.py              # 表格视图标签页
 │   │   ├── dialogs/               # 对话框组件
 │   │   │   ├── data_interface_tab.py      # 数据界面设置标签页
-│   │   │   ├── font_config_dialog.py      # 字体配置对话框
 │   │   │   ├── plot_settings_tab.py       # 绘图参数设置标签页
-│   │   │   └── preferences_dialog.py      # 偏好设置对话框
+│   │   │   ├── preferences_dialog.py      # 偏好设置对话框
+│   │   │   └── theme_dialog.py            # 主题设置对话框
 │   │   ├── menu_components/       # 菜单组件
-│   │   │   ├── edit_menu.py       # 编辑菜单(未完成)
-│   │   │   ├── file_menu.py       # 文件菜单(部分完成)
-│   │   │   ├── help_menu.py       # 帮助菜单(未完成)
-│   │   │   ├── tools_menu.py      # 工具菜单(部分完成)
-│   │   │   └── view_menu.py       # 视图菜单(未完成)
+│   │   │   ├── edit_menu.py       # 编辑菜单
+│   │   │   ├── file_menu.py       # 文件菜单
+│   │   │   ├── help_menu.py       # 帮助菜单
+│   │   │   ├── tools_menu.py      # 工具菜单
+│   │   │   └── view_menu.py       # 视图菜单
+│   │   ├── theme_components/      # 主题相关组件
+│   │   │   └── styled_widgets.py  # 样式化部件
 │   │   ├── chart_windows.py       # 图表窗口
 │   │   ├── main_window.py         # 主窗口
 │   │   └── menu.py                # 菜单栏
@@ -113,17 +125,38 @@ v-plotter/
    - 调整数据界面和绘图参数
    - 应用设置以立即生效
 
+### 主题切换操作
+
+1. **通过菜单切换主题**：
+   - 点击"视图"菜单
+   - 选择"主题"选项
+   - 在弹出的对话框中选择喜欢的主题
+   - 点击"确定"应用主题
+
+2. **主题自动保存**：
+   - 应用程序会自动记住您选择的主题
+   - 下次启动时会自动应用上次使用的主题
+
+### 设置管理
+
+1. **偏好设置**：
+   - 通过"工具"菜单中的"偏好设置"访问
+   - 包含"数据界面设置"和"绘图参数设置"两个标签页
+   - 设置会自动保存并在应用程序重启后保持
+
+2. **窗口状态记忆**：
+   - 应用程序会记住窗口的大小、位置和布局
+   - 关闭后重新打开时会恢复之前的窗口状态
+
 ### 快捷键
 
 - `Ctrl+O`: 打开数据表格
 - `Ctrl+N`: 新建数据表格
-- ==== 以下暂时失效 ====
 - `Ctrl+S`: 保存数据表格
-- `Ctrl+A+R`: 添加行
-- `Ctrl+D+R`: 删除行
-- `Ctrl+A+C`: 添加列
-- `Ctrl+D+C`: 删除列
-- ==== 分界线 ====
+- `Ctrl+Shift+R`: 添加行
+- `Ctrl+Shift+D`: 删除行
+- `Ctrl+Shift+C`: 添加列
+- `Ctrl+Shift+X`: 删除列
 - `Ctrl+A`: 全选
 - `Esc`: 清除选择
 - `Del`: 清除选中内容
@@ -142,11 +175,57 @@ v-plotter/
 2. 在 `src/core/settings_manager.py` 中实现设置的保存和加载逻辑
 3. 在应用程序中实现设置的应用逻辑
 
+### 添加新主题
+
+1. 在 `src/core/themes/`
+2. 目录下创建新的主题类，继承自 `BaseTheme`
+3. 实现所有抽象方法：`get_stylesheet()`, `get_icon()`, `apply_to_app()`, `apply_to_widget()`
+4. 在 `src/resources/themes/` 目录下创建对应的资源文件夹，包含样式表和配置文件
+5. 在 `ThemeManager` 的 `_discover_themes` 方法中添加对新主题的自动发现逻辑
+
+### 自定义样式
+
+1. 编辑主题目录下的 `styles.qss` 文件来自定义样式
+2. 使用 Qt 样式表语法控制各个部件的 appearance
+3. 可以通过 `theme.json` 配置文件定义颜色角色和字体设置
+
+### 信号系统
+
+应用程序使用基于 PyQt 信号的发布-订阅模式进行组件间通信：
+
+- `theme_signals`：处理主题相关事件
+- `settings_signals`：处理设置变更事件
+- `plot_signals`：处理绘图相关事件
+
+## 更新记录
+
+### 2025.08.26
+
+#### 主题系统架构
+
+1. **BaseTheme**：抽象基类，定义主题接口
+2. **ThemeManager**：主题管理器，负责主题的加载、切换和应用
+3. **具体主题实现**：LightTheme 和 DarkTheme 等具体主题实现
+4. **资源文件**：QSS样式表和JSON配置文件分离样式定义
+
+#### 设置管理系统
+
+1. **SettingsManager**：重构设置管理器，集中管理所有应用程序设置
+2. **分层设置结构**：
+   - UI设置：主题、字体、窗口状态等
+   - 数据界面设置：表格显示选项等
+   - 绘图设置：图表默认参数等
+3. **自动持久化**：设置自动保存到用户目录的JSON文件中
+
 ## 下一步的计划
 
-- 完善菜单
-- 重构图表
-- 美化界面
+- [ ] 增强绘图系统，支持更多图表类型
+- [ ] 添加绘图导入/导出功能
+- [ ] 实现主题编辑器，支持可视化定制
+- [ ] 添加高对比度主题，提升可访问性
+- [ ] 支持系统主题同步（跟随操作系统主题切换）
+- [ ] 添加主题预览功能
+- [ ] 实现设置项的版本管理，支持设置迁移
 
 ## 贡献指南
 

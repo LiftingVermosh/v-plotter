@@ -1,39 +1,37 @@
 # src/ui/main_window.py
 
 import pyqtgraph as pg
-from PyQt6.QtWidgets import QMainWindow, QSplitter, QVBoxLayout, QHBoxLayout, QWidget
+from PyQt6.QtWidgets import QApplication, QMainWindow, QSplitter, QVBoxLayout, QHBoxLayout, QWidget, QMessageBox
 from PyQt6.QtCore import Qt
 from src.ui.menu import MenuBar
 from src.ui.core_components import (
     left_zone_data_overview,
-    right_up_zone_plotarea,
-    right_down_zone_property_panel
+    right_up_zone_plotarea
 )
-from src.core.signals import plot_signals
-from src.core.settings_manager import SettingsManager  # 导入设置管理器
+from src.core.signals import plot_signals, theme_signals
+from src.core.settings_manager import SettingsManager
+from src.core.theme_manager import ThemeManager
 from src.ui.chart_windows import ChartWindow
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("V-Plotter")
-        self.resize(1200, 800)
         
-        # 数据容器管理
         self.data_containers = []
         self.current_container = None
         
-        self.init_data_containers()  # 初始化数据容器
-
-        self.init_settings_manager()  # 初始化设置管理器
-
-        self.init_ui()  # 初始化界面
+        self.init_data_containers()
+        self.init_managers()
+        self.init_ui()
+        self.restore_window_state()  # 使用SettingsManager恢复窗口状态
                 
-        # 设置全局默认背景和前景颜色
-        pg.setConfigOption('background', 'w')  # 白色背景
-        pg.setConfigOption('foreground', 'k')  # 黑色前景（文本、坐标轴等）
-        # 连接信号
+        pg.setConfigOption('background', 'w')
+        pg.setConfigOption('foreground', 'k')
         plot_signals.chart_window_requested.connect(self.handle_chart_window_request)
+        
+        QApplication.instance().processEvents()  # 处理所有 pending 事件
+        self.on_theme_changed('light')  # 应用主题
         
         self.show()
 
@@ -52,27 +50,12 @@ class MainWindow(QMainWindow):
         self.left_overview = left_zone_data_overview.LeftZoneDataOverview(self)
         main_splitter.addWidget(self.left_overview)
         
-        # 2. 右侧区域 - 垂直分割器 (75%)
-        right_splitter = QSplitter(Qt.Orientation.Vertical)
-        
-        # 2.1 右上表格区 (70%)
+        # 2.1 表格区 (70%)
         self.plot_area = right_up_zone_plotarea.PlotArea(self)
         
-        # 2.2 右下对象属性区 (30%)
-        self.property_panel = right_down_zone_property_panel.PropertyPanel(
-            self,
-            plot_area=self.plot_area
-        )
+        main_splitter.addWidget(self.plot_area)
         
-        right_splitter.addWidget(self.plot_area)
-        right_splitter.addWidget(self.property_panel)
-        
-        # 设置右侧垂直分割器的比例 (70% 表格区, 30% 属性面板)
-        right_splitter.setSizes([int(self.height() * 0.7), int(self.height() * 0.3)])
-        
-        main_splitter.addWidget(right_splitter)
-        
-        # 设置主水平分割器的比例 (25% 左侧, 75% 右侧)
+        # 设置主水平分割器的比例
         main_splitter.setSizes([int(self.width() * 0.25), int(self.width() * 0.75)])
         
         # 主布局
@@ -80,16 +63,13 @@ class MainWindow(QMainWindow):
         main_layout.addWidget(main_splitter)
         main_layout.setContentsMargins(5, 5, 5, 5)
 
-    def init_settings_manager(self):
-        # 初始化设置管理器
+    def init_managers(self):
+        """初始化管理器"""
         self.settings_manager = SettingsManager()
         self.settings = self.settings_manager.load_settings()
-        
-        # 使用设置中的默认尺寸
-        default_width = self.settings.get("data_interface", {}).get("default_width", 1200)
-        default_height = self.settings.get("data_interface", {}).get("default_height", 800)
-        self.resize(default_width, default_height)
-        
+        self.theme_manager = ThemeManager()
+        theme_signals.theme_changed.connect(self.on_theme_changed)
+    
     def init_data_containers(self):
         """初始化数据容器"""
         self.data_containers = []
@@ -133,9 +113,6 @@ class MainWindow(QMainWindow):
         if 0 <= selected_row < len(self.data_containers):
             self.current_container = self.data_containers[selected_row]
             
-            # 更新绘图区
-            self.update_plot_area()
-            
             # 更新属性面板
             self.update_property_panel()
     
@@ -151,4 +128,35 @@ class MainWindow(QMainWindow):
     def handle_chart_window_request(self, container, chart_type, options):
         """处理图表窗口请求"""
         chart_window = ChartWindow(container, chart_type, self, options)
-        chart_window.exec() 
+        chart_window.exec()
+ 
+    def restore_window_state(self):
+        """恢复窗口几何信息和状态"""
+        self.settings_manager.restore_window_state_and_geometry(self, default_size=(1200, 800))
+     
+    def closeEvent(self, event):
+        """窗口关闭事件"""
+        self.settings_manager.save_window_state_and_geometry(self)
+        # 调用父类的关闭事件处理
+        super().closeEvent(event)
+
+    def on_theme_changed(self, theme_name):
+        """主题更改时的处理"""
+        # 重新应用主题到当前窗口
+        app = QApplication.instance()
+        self.theme_manager.apply_theme(app=app, widget=self)
+        
+        # 强制更新所有子部件
+        self.update_all_children(self)
+
+    def update_all_children(self, widget):
+        """递归更新所有子部件的样式"""
+        for child in widget.findChildren(QWidget):
+            try:
+                child.style().unpolish(child)
+                child.style().polish(child)
+                child.update()
+                self.update_all_children(child)
+            except:
+                pass
+

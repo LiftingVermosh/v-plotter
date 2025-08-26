@@ -40,12 +40,6 @@ class LeftZoneDataOverview(QWidget):
         main_layout.setSpacing(5)
         main_layout.setContentsMargins(5, 5, 5, 5)
         
-        # 标题
-        title_label = QLabel("数据概览", self)
-        title_label.setFont(QFont("Arial", 8, QFont.Weight.Bold))
-        title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        main_layout.addWidget(title_label)
-        
         # 添加分隔线
         separator = QFrame(self)
         separator.setFrameShape(QFrame.Shape.HLine)
@@ -58,23 +52,6 @@ class LeftZoneDataOverview(QWidget):
         self.list_widget.setRootIsDecorated(False)  # 隐藏根装饰
         self.list_widget.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self.list_widget.setIndentation(0)  # 无缩进
-        self.list_widget.setStyleSheet("""
-            QTreeWidget {
-                background-color: #f0f0f0;
-                border: none;
-                outline: 0;
-            }
-            QTreeWidget::item {
-                height: 40px;
-                border: 1px solid #d0d0d0;
-                border-radius: 4px;
-                margin: 3px;
-                padding: 3px;
-            }
-            QTreeWidget::item:selected {
-                background-color: #d0e8ff;
-            }
-        """)
         
         # 设置自定义委托
         delegate = DataListItemDelegate(self.list_widget)

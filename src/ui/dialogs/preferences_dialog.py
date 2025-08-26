@@ -59,19 +59,12 @@ class PreferencesDialog(QDialog):
         }
     
     def apply_settings(self):
-        """应用设置但不关闭对话框"""
         settings = self.get_settings()
         if self.settings_manager.save_settings(settings):
             self.settings_changed.emit(settings)
-            # 更新字体设置
-            from src.core.font_manager import setup_chinese_font
-            setup_chinese_font(settings)
+            # 应用UI设置，如字体
+            self.settings_manager.apply_ui_settings(settings)
+    
     def accept(self):
-        """确认设置并关闭对话框"""
-        settings = self.get_settings()
-        if self.settings_manager.save_settings(settings):
-            self.settings_changed.emit(settings)
-            # 更新字体设置
-            from src.core.font_manager import setup_chinese_font
-            setup_chinese_font(settings)
-            super().accept()
+        self.apply_settings()
+        super().accept()

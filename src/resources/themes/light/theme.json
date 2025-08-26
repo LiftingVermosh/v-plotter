@@ -1,0 +1,36 @@
+{
+  "name": "Light Theme",
+  "version": "1.0.0",
+  "description": "明亮主题，适合白天使用",
+  "colors": {
+    "primary": "#007acc",
+    "secondary": "#6c757d",
+    "success": "#28a745",
+    "danger": "#dc3545",
+    "warning": "#ffc107",
+    "info": "#17a2b8",
+    "background": "#ffffff",
+    "foreground": "#212529",
+    "border": "#dee2e6"
+  },
+  "fonts": {
+    "default": {
+      "family": "Segoe UI",
+      "size": 12,
+      "bold": false,
+      "italic": false
+    },
+    "title": {
+      "family": "Segoe UI",
+      "size": 14,
+      "bold": true,
+      "italic": false
+    },
+    "monospace": {
+      "family": "Consolas",
+      "size": 11,
+      "bold": false,
+      "italic": false
+    }
+  }
+}

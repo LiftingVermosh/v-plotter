@@ -13,7 +13,7 @@ def main():
     # QApplication.setAttribute(Qt.ApplicationAttribute.AA_UseHighDpiPixmaps, True)
     app = QApplication(sys.argv)
     window = main_window.MainWindow()
-    setup_chinese_font
+    setup_chinese_font()
     sys.exit(app.exec())
 
 

@@ -49,6 +49,11 @@ class SettingsSignals(QObject):
     """设置通信的信号类"""
     settings_changed = pyqtSignal(dict)  # 设置改变信号 - 参数: 设置字典
 
+class ThemeSignals(QObject):
+    """主题相关信号类"""
+    theme_changed = pyqtSignal(str)  # 主题改变信号 - 参数: 主题名称
+    success_changed = pyqtSignal(bool, bool, str)  # 成功改变信号 - 参数: 成功状态、用户介入状态、主题名称
+
 # 创建全局唯一实例
 # 信号中心类实例
 component_signals = ComponentSignals()
@@ -67,3 +72,6 @@ plot_signals = PlotSignals()
 
 # 设置通信的信号中心类实例
 settings_signals = SettingsSignals()
+
+# 主题相关信号中心类实例
+theme_signals = ThemeSignals()

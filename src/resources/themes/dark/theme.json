@@ -1,0 +1,36 @@
+{
+    "name": "Dark",
+    "version": "1.0.0",
+    "description": "舒适的深色主题",
+    "colors": {
+        "primary": "#4ca6ff",
+        "secondary": "#8c8c8c",
+        "success": "#34c759",
+        "danger": "#ff3b30",
+        "warning": "#ffcc00",
+        "info": "#5ac8fa",
+        "background": "#1c1c1e",
+        "foreground": "#ffffff",
+        "border": "#38383a"
+    },
+    "fonts": {
+    "default": {
+      "family": "Segoe UI",
+      "size": 12,
+      "bold": false,
+      "italic": false
+    },
+    "title": {
+      "family": "Segoe UI",
+      "size": 14,
+      "bold": true,
+      "italic": false
+    },
+    "monospace": {
+      "family": "Consolas",
+      "size": 11,
+      "bold": false,
+      "italic": false
+    }
+  }
+}

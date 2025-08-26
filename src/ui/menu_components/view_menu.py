@@ -1,7 +1,8 @@
 # src/ui/menu_components/view_menu.py
-# 这个文件是用来实现视图菜单栏的功能的，包括缩放、界面元素切换等功能。
+# 这个文件是用来实现视图菜单栏的功能的，包括启用工具栏、界面主题切换等功能。
 
 from PyQt6.QtWidgets import QMenu
+from src.ui.dialogs.theme_dialog import ThemeDialog
 
 class ViewMenu(QMenu):
     def __init__(self, parent=None, main_window = None):
@@ -9,35 +10,27 @@ class ViewMenu(QMenu):
         self.main_window = main_window
         
         # 视图选项
-        self.zoom_in_action = self.addAction("放大(&I)")
-        self.zoom_out_action = self.addAction("缩小(&O)")
-        self.reset_zoom_action = self.addAction("重置缩放(&R)")
+        self.change_theme_action = self.addAction("主题(&T)")
         self.addSeparator()
         
         # 界面元素切换
-        self.toolbar_action = self.addAction("工具栏(&T)")
+        self.toolbar_action = self.addAction("工具栏")
         self.toolbar_action.setCheckable(True)
         self.toolbar_action.setChecked(True)
         
-        self.statusbar_action = self.addAction("状态栏(&S)")
+        self.statusbar_action = self.addAction("状态栏")
         self.statusbar_action.setCheckable(True)
         self.statusbar_action.setChecked(True)
         
         # 连接信号
-        self.zoom_in_action.triggered.connect(self.zoom_in)
-        self.zoom_out_action.triggered.connect(self.zoom_out)
-        self.reset_zoom_action.triggered.connect(self.reset_zoom)
+        self.change_theme_action.triggered.connect(self.open_theme_dialog)
         self.toolbar_action.triggered.connect(self.toggle_toolbar)
         self.statusbar_action.triggered.connect(self.toggle_statusbar)
 
-    def zoom_in(self):
-        pass
-
-    def zoom_out(self):
-        pass
-
-    def reset_zoom(self):
-        pass
+    def open_theme_dialog(self):
+        """打开主题对话框"""
+        theme_dialog = ThemeDialog(self.main_window)
+        theme_dialog.exec()
 
     def toggle_toolbar(self):
         pass
