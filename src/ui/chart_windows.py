@@ -102,7 +102,7 @@ class ChartWindow(QDialog):
         headers = self.container.column_headers
         
         # 确保数据是二维的
-        if not data_array:
+        if not data_array.any():
             QMessageBox.warning(self, "错误", "数据为空！")
             return
 

@@ -42,7 +42,6 @@ class DataSignals(QObject):
 
 class PlotSignals(QObject):
     """绘图通信的信号类"""
-    
     chart_window_requested = pyqtSignal(object, str, dict)  # 创建窗口请求信号 - 参数：容器、图表类型、选项
 
 class SettingsSignals(QObject):
@@ -53,6 +52,18 @@ class ThemeSignals(QObject):
     """主题相关信号类"""
     theme_changed = pyqtSignal(str)  # 主题改变信号 - 参数: 主题名称
     success_changed = pyqtSignal(bool, bool, str)  # 成功改变信号 - 参数: 成功状态、用户介入状态、主题名称
+
+class EditSignals(QObject):
+    """编辑相关信号类"""
+    undo_available = pyqtSignal(bool)  # 撤销可用信号 - 参数: 是否可用
+    redo_available = pyqtSignal(bool)  # 重做可用信号 - 参数: 是否可用
+    find_available = pyqtSignal(bool)  # 查找可用信号 - 参数: 是否可用
+    replace_available = pyqtSignal(bool)  # 替换可用信号 - 参数: 是否可用
+    find_requested = pyqtSignal(str, bool, bool)        # 文本，是否区分大小写，是否全词匹配
+    replace_requested = pyqtSignal(str, str, bool, bool)     # 文本, 替换文本，是否区分大小写，是否全词匹配
+    replace_all_requested = pyqtSignal(str, str, bool, bool)  # 文本, 替换文本，是否区分大小写，是否全词匹配
+    replace_all_finished = pyqtSignal()  # 替换全部完成信号
+
 
 # 创建全局唯一实例
 # 信号中心类实例
@@ -75,3 +86,6 @@ settings_signals = SettingsSignals()
 
 # 主题相关信号中心类实例
 theme_signals = ThemeSignals()
+
+# 编辑相关信号中心类实例
+edit_signals = EditSignals()

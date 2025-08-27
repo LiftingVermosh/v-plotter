@@ -111,12 +111,13 @@ class LeftZoneDataOverview(QWidget):
         # 名称
         name_label = QLabel(container.name)
         name_label.setFont(QFont("Arial", 10, QFont.Weight.Bold))
+        name_label.setStyleSheet("border: none; background: transparent;") 
         details_layout.addWidget(name_label)
         
         # 类型和大小
         type_label = QLabel(f"类型: {container.data_type}")
         type_label.setFont(QFont("Arial", 8))
-        type_label.setStyleSheet("color: #666666;")
+        type_label.setStyleSheet("color: #666666; border: none; background: transparent;") 
         details_layout.addWidget(type_label)
         
         layout.addLayout(details_layout)

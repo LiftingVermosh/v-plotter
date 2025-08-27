@@ -4,8 +4,8 @@ from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QTableView, QAbstractItemView
                              QInputDialog, QMenu, QLineEdit, QStyledItemDelegate,
                              QApplication, QStyleOptionViewItem, QStyle)
 from PyQt6.QtCore import QAbstractTableModel, Qt, QModelIndex, QPoint
-from PyQt6.QtGui import QKeySequence, QShortcut, QClipboard, QBrush, QColor
-from src.core.signals import data_signals
+from PyQt6.QtGui import QKeySequence, QShortcut, QClipboard, QBrush, QColor, QFont
+from src.core.signals import data_signals, theme_signals
 import numpy as np
 import re
 
@@ -57,7 +57,8 @@ class TableModel(QAbstractTableModel):
             for i in range(self._data.shape[0]):
                 for j in range(self._data.shape[1]):
                     if j == 0:
-                        self._data[i, j] = ''  # 第一列空字符串
+                        self._data[i, j] = "\"请输入数值或文本\""  # 第一列
+                        
                     else:
                         self._data[i, j] = 0.0  # 其他列0.0
         
@@ -80,13 +81,20 @@ class TableModel(QAbstractTableModel):
         elif role == Qt.ItemDataRole.EditRole:
             return self._data[row, col]
         elif role == Qt.ItemDataRole.TextAlignmentRole:
-            if col == 0:  # 第一列，左对齐
-                return Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
-            else:  # 其他列，右对齐
-                return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
-        elif role == Qt.ItemDataRole.BackgroundRole and self.modified:
-            return QBrush(QColor(255, 255, 200))  # 修改过的单元格淡黄色背景
-        
+            return Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignHCenter
+        elif role == Qt.ItemDataRole.ForegroundRole:
+            if col == 0:  # 第一列，淡灰色
+                return QBrush(QColor(128, 128, 128))
+            # 其他列随主题颜色字体设置
+        elif role == Qt.ItemDataRole.FontRole:
+            # 如果是第一列且内容是默认提示文本，设置为斜体
+            if col == 0 and self._data[row, col] == "\"请输入数值或文本\"":
+                font = QFont()
+                font.setItalic(True)  # 设置斜体
+                font.setBold(True)    # 粗体
+                font.setFamily("Arial")  # 字体家族
+                return font
+
         return None
     
     def setData(self, index, value, role=Qt.ItemDataRole.EditRole):
@@ -213,6 +221,7 @@ class TableViewTab(QWidget):
         self.init_ui()
         self.setup_shortcuts()
         data_signals.data_modified.connect(self.update_container_data)
+        theme_signals.theme_changed.connect(self.on_theme_changed)
 
     def update_container_data(self, data, headers):
         """更新容器数据"""
@@ -280,8 +289,8 @@ class TableViewTab(QWidget):
         # 删除行: Ctrl+Shift+D
         QShortcut(QKeySequence("Ctrl+Shift+D"), self).activated.connect(self.remove_row)
         
-        # 添加列: Ctrl+Shift+C
-        QShortcut(QKeySequence("Ctrl+Shift+C"), self).activated.connect(self.add_column)
+        # 添加列: Ctrl+Shift+T
+        QShortcut(QKeySequence("Ctrl+Shift+T"), self).activated.connect(self.add_column)
         
         # 删除列: Ctrl+Shift+X
         QShortcut(QKeySequence("Ctrl+Shift+X"), self).activated.connect(self.remove_column)
@@ -441,7 +450,7 @@ class TableViewTab(QWidget):
         for index in selected_indexes:
             self.model.setData(index, "", Qt.ItemDataRole.EditRole)
     
-    # 复制/粘贴功能
+    # 复制/粘贴/剪切功能
     def copy_selection(self):
         """复制选中内容到剪贴板"""
         selected_indexes = self.tableView.selectedIndexes()
@@ -497,6 +506,145 @@ class TableViewTab(QWidget):
                 if target_row < model.rowCount() and target_col < model.columnCount():
                     model.setData(model.index(target_row, target_col), value, Qt.ItemDataRole.EditRole)
     
+    def cut_selection(self):
+        """剪切选中内容"""
+        self.copy_selection()
+        self.clear_selection
+
+    # 查找/替换相关
+    def _matches_text(self, cell_value, text, case_sensitive, whole_word):
+        """判断单元格值是否匹配"""
+        if not case_sensitive:
+            cell_value = cell_value.lower()
+            search_text = text.lower()
+        
+        if whole_word:
+            # 全字匹配，尝试regex
+            import re
+            pattern = re.compile(r'\b{}\b'.format(re.escape(text)))
+            return pattern.search(cell_value) is not None
+        else:
+            # 部分匹配
+            return text in cell_value
+
+    def find_text(self, text, case_sensitive=False, whole_word=False, forward=True):
+        """查找指定文本"""
+        if not text:
+            return 
+        # 获取模型
+        model = self.tableView.model()
+        rows = model.rowCount()
+        cols = model.columnCount()
+
+        # 确定起始位置
+        current_selection = self.tableView.selectedIndexes()
+        start_row, start_col = 0, 0
+        if current_selection:
+            start_row = current_selection[0].row()
+            start_col = current_selection[0].column()
+            if forward:
+                start_col += 1
+                if start_col >= cols:
+                    start_row += 1
+                    start_col = 0
+            else:
+                start_col -= 1
+                if start_col < 0:
+                    start_row -= 1
+                    start_col = cols - 1
+        # 遍历单元格
+        found = False
+        for r in range(start_row, rows):
+            for c in range(start_col if r == start_row else 0, cols):
+                index = model.index(r, c)
+                cell_value = model.data(index, Qt.ItemDataRole.DisplayRole)
+                if cell_value and self._matches_text(cell_value, text, case_sensitive, whole_word):
+                    self.tableView.setCurrentIndex(index)
+                    self.tableView.scrollTo(index)
+                    found = True
+                    break
+            if found:
+                break
+            start_col = 0
+
+        if not found:
+            QMessageBox.information(self, "查找结果", f"未找到匹配项：{text}")
+                
+    def _replace_in_text(self, text, find_text, replace_text, case_sensitive, whole_word):
+        """在文本中替换匹配的部分"""
+        if not case_sensitive:
+            # 不区分大小写替换
+            if whole_word:
+                # 全字匹配替换
+                import re
+                pattern = re.compile(r'\b{}\b'.format(re.escape(find_text)), re.IGNORECASE)
+                return pattern.sub(replace_text, text)
+            else:
+                # 部分匹配替换
+                return text.replace(find_text, replace_text)
+        else:
+            # 区分大小写替换
+            if whole_word:
+                # 全字匹配替换
+                import re
+                pattern = re.compile(r'\b{}\b'.format(re.escape(find_text)))
+                return pattern.sub(replace_text, text)
+            else:
+                # 部分匹配替换
+                return text.replace(find_text, replace_text)
+
+    def replace_text(self, find_text, replace_text, case_sensitive=False, whole_word=False, replace_all=False):
+        """替换指定文本"""
+        if not find_text:
+            return
+
+        # 获取模型
+        model = self.tableView.model()
+        rows = model.rowCount()
+        cols = model.columnCount()
+
+        # 确定起始位置
+        current_index = self.tableView.currentIndex()
+        start_row, start_col = 0, 0
+        if current_index.isValid():
+            start_row = current_index.row()
+            start_col = current_index.column()
+        
+        replaced_count = 0
+        
+        # 如果是替换全部，遍历所有单元格
+        if replace_all:
+            for r in range(rows):
+                for c in range(cols):
+                    index = model.index(r, c)
+                    cell_value = model.data(index, Qt.ItemDataRole.DisplayRole)
+                    if cell_value and self._matches_text(cell_value, find_text, case_sensitive, whole_word):
+                        new_value = self._replace_in_text(cell_value, find_text, replace_text, case_sensitive, whole_word)
+                        model.setData(index, new_value, Qt.ItemDataRole.EditRole)
+                        replaced_count += 1
+            
+            QMessageBox.information(self, "替换", f"已替换 {replaced_count} 处文本")
+        else:
+            # 只替换当前选中的单元格
+            if current_index.isValid():
+                cell_value = model.data(current_index, Qt.ItemDataRole.DisplayRole)
+                if cell_value and self._matches_text(cell_value, find_text, case_sensitive, whole_word):
+                    new_value = self._replace_in_text(cell_value, find_text, replace_text, case_sensitive, whole_word)
+                    model.setData(current_index, new_value, Qt.ItemDataRole.EditRole)
+                    replaced_count = 1
+                    # 查找下一个匹配项
+                    self.find_text(find_text, case_sensitive, whole_word)
+                else:
+                    # 如果当前单元格不匹配，查找下一个
+                    self.find_text(find_text, case_sensitive, whole_word)
+            else:
+                # 如果没有选中单元格，从开头查找
+                self.find_text(find_text, case_sensitive, whole_word)
+            
+            if replaced_count == 0:
+                QMessageBox.information(self, "替换", "未找到匹配项")
+
+
     # 右键菜单功能
     def show_context_menu(self, pos):
         """显示右键菜单"""
@@ -553,3 +701,8 @@ class TableViewTab(QWidget):
     def get_table_data(self):
         """获取表格数据"""
         return self.model.get_data()
+
+    def on_theme_changed(self):
+        """主题切换时刷新视图"""
+        self.tableView.setStyleSheet("")
+        self.tableView.viewport().update()

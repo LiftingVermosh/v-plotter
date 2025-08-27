@@ -1,3 +1,3 @@
-from . import left_zone_data_overview, right_up_zone_plotarea, table_view_tab
+from . import data_overview, table_tab_area, table_view_tab
 
-__all__ = ["left_zone_data_overview", "right_up_zone_plotarea", "table_view_tab"]
+__all__ = ["data_overview", "table_tab_area", "table_view_tab"]

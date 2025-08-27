@@ -5,12 +5,13 @@ from PyQt6.QtWidgets import QApplication, QMainWindow, QSplitter, QVBoxLayout, Q
 from PyQt6.QtCore import Qt
 from src.ui.menu import MenuBar
 from src.ui.core_components import (
-    left_zone_data_overview,
-    right_up_zone_plotarea
+    data_overview,
+    table_tab_area
 )
 from src.core.signals import plot_signals, theme_signals
 from src.core.settings_manager import SettingsManager
 from src.core.theme_manager import ThemeManager
+from src.core.command_manager import CommandManager
 from src.ui.chart_windows import ChartWindow
 
 class MainWindow(QMainWindow):
@@ -47,11 +48,11 @@ class MainWindow(QMainWindow):
         main_splitter = QSplitter(Qt.Orientation.Horizontal, central_widget)
         
         # 1. 左侧数据概览区 (25%)
-        self.left_overview = left_zone_data_overview.LeftZoneDataOverview(self)
+        self.left_overview = data_overview.LeftZoneDataOverview(self)
         main_splitter.addWidget(self.left_overview)
         
         # 2.1 表格区 (70%)
-        self.plot_area = right_up_zone_plotarea.PlotArea(self)
+        self.plot_area = table_tab_area.PlotArea(self)
         
         main_splitter.addWidget(self.plot_area)
         
@@ -69,6 +70,7 @@ class MainWindow(QMainWindow):
         self.settings = self.settings_manager.load_settings()
         self.theme_manager = ThemeManager()
         theme_signals.theme_changed.connect(self.on_theme_changed)
+        self.command_manager = CommandManager()
     
     def init_data_containers(self):
         """初始化数据容器"""
@@ -125,6 +127,14 @@ class MainWindow(QMainWindow):
         """获取当前活动的数据容器"""
         return self.current_container
 
+    def get_current_tab(self):
+        """获取当前活动的表格标签页"""
+        return self.plot_area.get_current_table_tab()
+
+    def get_command_manager(self):
+        """获取命令管理器"""
+        return self.command_manager
+
     def handle_chart_window_request(self, container, chart_type, options):
         """处理图表窗口请求"""
         chart_window = ChartWindow(container, chart_type, self, options)
@@ -145,18 +155,3 @@ class MainWindow(QMainWindow):
         # 重新应用主题到当前窗口
         app = QApplication.instance()
         self.theme_manager.apply_theme(app=app, widget=self)
-        
-        # 强制更新所有子部件
-        self.update_all_children(self)
-
-    def update_all_children(self, widget):
-        """递归更新所有子部件的样式"""
-        for child in widget.findChildren(QWidget):
-            try:
-                child.style().unpolish(child)
-                child.style().polish(child)
-                child.update()
-                self.update_all_children(child)
-            except:
-                pass
-
