@@ -99,9 +99,7 @@ class ThemeManager(QObject):
             if app:
                 self.current_theme.apply_to_app(app)
             if widget:
-                # 确保部件可见后应用主题
-                if not widget.isVisible():
-                    widget.show()
+                # 应用主题
                 self.current_theme.apply_to_widget(widget)
             
                 # 强制更新菜单栏

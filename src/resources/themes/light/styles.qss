@@ -71,7 +71,7 @@ QComboBox {
     border: 1px solid #dee2e6;
     border-radius: 4px;
     padding: 8px;
-    background-color: white;
+    background: transparent;
     selection-background-color: #007acc;
 }
 
@@ -168,4 +168,7 @@ QToolTip {
     padding: 8px;
 }
 
-/* 更多样式... */
+LeftZoneDataOverview QLabel {
+    border: none;
+    background: transparent;
+}

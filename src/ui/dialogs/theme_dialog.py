@@ -53,3 +53,4 @@ class ThemeDialog(QDialog):
     
     def reject(self):
         super().reject()
+        

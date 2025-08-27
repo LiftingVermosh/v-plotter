@@ -1,5 +1,6 @@
 # src/core/base_theme.py
 from abc import ABC, abstractmethod
+from PyQt6.QtWidgets import QMessageBox
 from PyQt6.QtCore import QObject
 from PyQt6.QtGui import QColor, QFont, QIcon
 from pathlib import Path
@@ -32,10 +33,8 @@ class BaseTheme(QObject, ABC, metaclass=QObjectABCMeta):
                     self.stylesheet = f.read()
                     # 确保样式表不为空
                     if not self.stylesheet.strip():
-                        print(f"警告: {self.name} 主题的样式表为空，使用默认样式表")
+                        QMessageBox.warning(f"警告: {self.name} 主题的样式表为空，使用默认样式表")
                         self.stylesheet = self._get_default_stylesheet()
-                    else:
-                        print(f"成功加载 {self.name} 主题的样式表")
             except Exception as e:
                 print(f"加载样式表失败: {e}")
                 self.stylesheet = self._get_default_stylesheet()

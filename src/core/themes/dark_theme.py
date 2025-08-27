@@ -43,25 +43,6 @@ class DarkTheme(BaseTheme):
         # 设置字体
         app.setFont(self.get_font("default"))
         
-        # 设置深色调色板
-        palette = QPalette()
-        palette.setColor(QPalette.ColorRole.Window, QColor(30, 30, 30))
-        palette.setColor(QPalette.ColorRole.WindowText, QColor(242, 242, 242))
-        palette.setColor(QPalette.ColorRole.Base, QColor(45, 45, 45))
-        palette.setColor(QPalette.ColorRole.AlternateBase, QColor(50, 50, 50))
-        palette.setColor(QPalette.ColorRole.ToolTipBase, QColor(30, 30, 30))
-        palette.setColor(QPalette.ColorRole.ToolTipText, QColor(242, 242, 242))
-        palette.setColor(QPalette.ColorRole.Text, QColor(242, 242, 242))
-        palette.setColor(QPalette.ColorRole.Button, QColor(50, 50, 50))
-        palette.setColor(QPalette.ColorRole.ButtonText, QColor(242, 242, 242))
-        palette.setColor(QPalette.ColorRole.BrightText, QColor(255, 0, 0))
-        palette.setColor(QPalette.ColorRole.Link, QColor(0, 122, 204))
-        palette.setColor(QPalette.ColorRole.Highlight, QColor(0, 122, 204))
-        palette.setColor(QPalette.ColorRole.HighlightedText, QColor(255, 255, 255))
-        
-        # 设置应用程序调色板
-        app.setPalette(palette)
-        
         # 强制更新菜单栏
         for widget in app.topLevelWidgets():
             if hasattr(widget, 'menuBar') and widget.menuBar():
@@ -75,15 +56,7 @@ class DarkTheme(BaseTheme):
         """特别处理菜单栏"""
         # 设置菜单栏样式表
         menu_bar.setStyleSheet(self.stylesheet)
-        
-        # 设置菜单栏调色板
-        palette = menu_bar.palette()
-        palette.setColor(QPalette.ColorRole.Window, QColor(30, 30, 30))
-        palette.setColor(QPalette.ColorRole.WindowText, QColor(242, 242, 242))
-        palette.setColor(QPalette.ColorRole.Button, QColor(50, 50, 50))
-        palette.setColor(QPalette.ColorRole.ButtonText, QColor(242, 242, 242))
-        menu_bar.setPalette(palette)
-        
+
         # 强制更新菜单栏
         menu_bar.style().unpolish(menu_bar)
         menu_bar.style().polish(menu_bar)
@@ -92,25 +65,25 @@ class DarkTheme(BaseTheme):
 
     def apply_to_widget(self, widget):
         """将主题应用到特定部件及其所有子部件"""
-        # 设置部件样式表
-        widget.setStyleSheet(self.stylesheet)
+        # # 设置部件样式表
+        # widget.setStyleSheet(self.stylesheet)
         
-        # 设置部件调色板
-        palette = widget.palette()
-        palette.setColor(QPalette.ColorRole.Window, QColor(30, 30, 30))
-        palette.setColor(QPalette.ColorRole.WindowText, QColor(242, 242, 242))
-        widget.setPalette(palette)
+        # # 设置部件调色板
+        # palette = widget.palette()
+        # palette.setColor(QPalette.ColorRole.Window, QColor(30, 30, 30))
+        # palette.setColor(QPalette.ColorRole.WindowText, QColor(242, 242, 242))
+        # widget.setPalette(palette)
         
-        # 递归应用样式到所有子部件
-        for child in widget.findChildren(QWidget):
-            try:
-                child.setStyleSheet(self.stylesheet)
-                child_palette = child.palette()
-                child_palette.setColor(QPalette.ColorRole.Window, QColor(30, 30, 30))
-                child_palette.setColor(QPalette.ColorRole.WindowText, QColor(242, 242, 242))
-                child.setPalette(child_palette)
-            except:
-                pass
+        # # 递归应用样式到所有子部件
+        # for child in widget.findChildren(QWidget):
+        #     try:
+        #         child.setStyleSheet(self.stylesheet)
+        #         child_palette = child.palette()
+        #         child_palette.setColor(QPalette.ColorRole.Window, QColor(30, 30, 30))
+        #         child_palette.setColor(QPalette.ColorRole.WindowText, QColor(242, 242, 242))
+        #         child.setPalette(child_palette)
+        #     except:
+        #         pass
         
         # 强制更新部件
         widget.style().unpolish(widget)
