@@ -155,7 +155,7 @@ v-plotter/
 - `Ctrl+S`: 保存数据表格
 - `Ctrl+Shift+R`: 添加行
 - `Ctrl+Shift+D`: 删除行
-- `Ctrl+Shift+C`: 添加列
+- `Ctrl+Shift+T`: 添加列
 - `Ctrl+Shift+X`: 删除列
 - `Ctrl+A`: 全选
 - `Esc`: 清除选择
