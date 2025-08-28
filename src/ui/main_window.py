@@ -47,11 +47,11 @@ class MainWindow(QMainWindow):
         # 主布局 - 水平分割器
         main_splitter = QSplitter(Qt.Orientation.Horizontal, central_widget)
         
-        # 1. 左侧数据概览区 (25%)
-        self.left_overview = data_overview.LeftZoneDataOverview(self)
+        # 左侧数据概览区 (25%)
+        self.left_overview = data_overview.LeftZoneDataOverview(main_splitter, self)
         main_splitter.addWidget(self.left_overview)
         
-        # 2.1 表格区 (70%)
+        # 表格区 (70%)
         self.plot_area = table_tab_area.PlotArea(self)
         
         main_splitter.addWidget(self.plot_area)

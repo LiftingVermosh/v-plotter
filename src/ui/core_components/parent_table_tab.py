@@ -1,13 +1,14 @@
 # src/ui/core_components/parent_table_tab.py
-from PyQt6.QtWidgets import QTabWidget, QWidget, QMessageBox
+from PyQt6.QtWidgets import QTabWidget, QWidget, QMessageBox, QInputDialog, QLineEdit
 from .table_view_tab import TableViewTab
 from src.core.signals import tab_signals, container_signals
 from src.core.data_container import DataContainer
 import uuid
 
 class ParentTableTab(QTabWidget):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, main_window=None):
         super().__init__(parent)
+        self.main_window = main_window
         self.tab_map = {}  # {container_uuid: {"widget": TableViewTab, "container": dict}}
         self.name = "表格父标签页"
 
@@ -15,6 +16,7 @@ class ParentTableTab(QTabWidget):
         self.welcome_tab = QWidget()
         self.addTab(self.welcome_tab, "默认表格页")
         self.setTabsClosable(True)
+        self.tabBar().tabBarDoubleClicked.connect(self.on_tab_double_clicked)
         self.tabCloseRequested.connect(self.handle_tab_close_by_index)
         
         # 信号连接
@@ -23,6 +25,7 @@ class ParentTableTab(QTabWidget):
         tab_signals.activate_table_tab.connect(self.activate_tab)            # 激活表格子标签页信号
         container_signals.container_created.connect(self.on_container_created)  # 数据容器创建信号
         tab_signals.table_tab_closed.connect(self.handle_tab_close_by_uuid)           # 表格子标签页关闭信号
+        tab_signals.table_tab_renamed.connect(self.handle_tab_rename)           # 表格子标签页重命名信号
 
     
     def on_container_created(self):
@@ -46,7 +49,7 @@ class ParentTableTab(QTabWidget):
             return
         
         # 创建新的表格视图
-        table_view = TableViewTab(container)
+        table_view = TableViewTab(container, self.main_window, self)
         tab_name = container.name if container.name else f"数据表 {len(self.tab_map) + 1}"
         
         # 添加到标签页
@@ -145,3 +148,45 @@ class ParentTableTab(QTabWidget):
         container_uuid = container.get('uuid')
         if container_uuid in self.tab_map:
             tab_signals.table_tab_closed.emit(container_uuid)
+
+    def on_tab_double_clicked(self, index):
+        """处理标签页双击事件"""
+        if index == self.indexOf(self.welcome_tab):
+            return # 忽略欢迎页
+        
+        # 获取容器对象uuid
+        container_uuid = None
+        for uuid_str, info in self.tab_map.items():
+            if info["index"] == index:
+                container_uuid = uuid_str
+                break
+
+        if container_uuid:
+            # 获取当前标签页名称
+            current_tab_name = self.tabText(index)
+            
+            # 弹出输入对话框
+            new_tab_name, ok = QInputDialog.getText(self, "重命名标签页", "请输入新名称:", text=current_tab_name)
+            if ok and new_tab_name:
+                # 重命名标签页
+                self.setTabText(index, new_tab_name)
+                
+                # 同步更新容器名称
+                container = self.tab_map[container_uuid]["container"]
+                container.name = new_tab_name
+
+                # 通知其他组件
+                tab_signals.table_tab_renamed.emit(container_uuid, new_tab_name)
+        else:
+            print(f"未找到索引为{index}的标签页")
+    
+    def handle_tab_rename(self, container_uuid, new_name):
+        """处理标签页重命名事件"""
+        if container_uuid in self.tab_map:
+            # 更新标签页名称
+            tab_index = self.tab_map[container_uuid]["index"]
+            self.setTabText(tab_index, new_name)
+
+            # 同步更新容器名称
+            container = self.tab_map[container_uuid]["container"]
+            container.name = new_name

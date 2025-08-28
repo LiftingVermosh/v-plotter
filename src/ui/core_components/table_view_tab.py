@@ -5,12 +5,17 @@ from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QTableView, QAbstractItemView
                              QApplication, QStyleOptionViewItem, QStyle)
 from PyQt6.QtCore import QAbstractTableModel, Qt, QModelIndex, QPoint
 from PyQt6.QtGui import QKeySequence, QShortcut, QClipboard, QBrush, QColor, QFont
-from src.core.signals import data_signals, theme_signals
+from src.core.signals import data_signals, theme_signals, tab_signals
+from src.core.command_manager import EditCellCommand, AddRowCommand, RemoveRowCommand, AddColumnCommand, RemoveColumnCommand
 import numpy as np
 import re
 
 class NumericDelegate(QStyledItemDelegate):
     """自定义委托，支持第一列字符串输入，其他列数值验证"""
+    def __init__(self, command_manager, parent=None):
+        super().__init__(parent)
+        self.command_manager = command_manager
+
     def createEditor(self, parent, option, index):
         editor = QLineEdit(parent)
         col = index.column()
@@ -27,18 +32,30 @@ class NumericDelegate(QStyledItemDelegate):
     def setModelData(self, editor, model, index):
         text = editor.text().strip()
         col = index.column()
-        if col == 0:  # 第一列，直接设置文本
-            model.setData(index, text, Qt.ItemDataRole.EditRole)
-        else:  # 其他列，尝试转换为float
-            if text:
-                try:
-                    value = float(text)
-                    model.setData(index, value, Qt.ItemDataRole.EditRole)
-                except ValueError:
-                    # 转换失败，保留原始值（不更新）
-                    pass
-            else:
-                model.setData(index, 0.0, Qt.ItemDataRole.EditRole)  # 空文本设置为0.0
+        old_value = model.data(index, Qt.ItemDataRole.EditRole)
+        if col == 0:
+            new_value = text
+        else:
+            try:
+                new_value = float(text) if text else 0.0
+            except ValueError:
+                new_value = old_value  # 转换失败，保持原值
+        if new_value != old_value:
+            command = EditCellCommand(model, index, old_value, new_value)
+            self.command_manager.execute(command)  # 执行命令
+            
+        # if col == 0:  # 第一列，直接设置文本
+        #     model.setData(index, text, Qt.ItemDataRole.EditRole)
+        # else:  # 其他列，尝试转换为float
+        #     if text:
+        #         try:
+        #             value = float(text)
+        #             model.setData(index, value, Qt.ItemDataRole.EditRole)
+        #         except ValueError:
+        #             # 转换失败，保留原始值（不更新）
+        #             pass
+        #     else:
+        #         model.setData(index, 0.0, Qt.ItemDataRole.EditRole)  # 空文本设置为0.0
 
 class TableModel(QAbstractTableModel):
     """自定义表格模型，第一列支持字符串，其他列支持数值"""
@@ -214,14 +231,22 @@ class TableModel(QAbstractTableModel):
 
 class TableViewTab(QWidget):
     """ 单个表格视图标签页 """
-    def __init__(self, container, parent=None):
+    def __init__(self, container, main_window=None, parent=None):
         super().__init__(parent)
         self.container = container
+        self.main_window = main_window
+        self.command_manager = main_window.get_command_manager()
         self.model = None
         self.init_ui()
         self.setup_shortcuts()
+        tab_signals.table_tab_renamed.connect(self.on_tab_renamed)
         data_signals.data_modified.connect(self.update_container_data)
         theme_signals.theme_changed.connect(self.on_theme_changed)
+
+    def on_tab_renamed(self, uuid, name):
+        """处理标签页重命名事件"""
+        if self.container.uuid == uuid:
+            self.container.name = name
 
     def update_container_data(self, data, headers):
         """更新容器数据"""
@@ -274,7 +299,7 @@ class TableViewTab(QWidget):
         self.tableView.setModel(self.model)
         
         # 设置自定义委托
-        self.delegate = NumericDelegate()
+        self.delegate = NumericDelegate(self.command_manager)
         self.tableView.setItemDelegate(self.delegate)
         
         layout.addLayout(button_layout)
@@ -361,54 +386,92 @@ class TableViewTab(QWidget):
             self.edit_header(col)
     
     # 行列操作方法
+    # def add_row(self):
+    #     """在选中区域下方添加新行"""
+    #     selected_indexes = self.tableView.selectedIndexes()
+    #     row = max(index.row() for index in selected_indexes) + 1 if selected_indexes else self.model.rowCount()
+    #     self.model.insertRow(row)
+    
+    # def remove_row(self):
+    #     """删除所有选中行"""
+    #     selected_indexes = self.tableView.selectedIndexes()
+    #     if not selected_indexes:
+    #         QMessageBox.warning(self, "操作错误", "请先选择要删除的行")
+    #         return
+        
+    #     # 获取所有选中行的索引（去重）
+    #     rows_to_remove = sorted(set(index.row() for index in selected_indexes), reverse=True)
+        
+    #     if self.model.rowCount() <= len(rows_to_remove):
+    #         QMessageBox.warning(self, "操作错误", "至少需要保留一行")
+    #         return
+        
+    #     # 从大到小删除，避免索引变化导致错误
+    #     for row in rows_to_remove:
+    #         self.model.removeRow(row)
+    
+    # def add_column(self):
+    #     """在选中区域右侧添加新列"""
+    #     selected_indexes = self.tableView.selectedIndexes()
+    #     col = max(index.column() for index in selected_indexes) + 1 if selected_indexes else self.model.columnCount()
+    #     self.model.insertColumn(col)
+    
+    # def remove_column(self):
+    #     """删除所有选中列"""
+    #     selected_indexes = self.tableView.selectedIndexes()
+    #     if not selected_indexes:
+    #         QMessageBox.warning(self, "操作错误", "请先选择要删除的列")
+    #         return
+        
+    #     # 获取所有选中列的索引（去重）
+    #     cols_to_remove = sorted(set(index.column() for index in selected_indexes), reverse=True)
+        
+    #     if self.model.columnCount() <= len(cols_to_remove):
+    #         QMessageBox.warning(self, "操作错误", "至少需要保留一列")
+    #         return
+        
+    #     # 从大到小删除，避免索引变化导致错误
+    #     for col in cols_to_remove:
+    #         self.model.removeColumn(col)
+    
     def add_row(self):
-        """在选中区域下方添加新行"""
         selected_indexes = self.tableView.selectedIndexes()
         row = max(index.row() for index in selected_indexes) + 1 if selected_indexes else self.model.rowCount()
-        self.model.insertRow(row)
-    
+        command = AddRowCommand(self.model, row)
+        self.command_manager.execute(command)
+
     def remove_row(self):
-        """删除所有选中行"""
         selected_indexes = self.tableView.selectedIndexes()
         if not selected_indexes:
             QMessageBox.warning(self, "操作错误", "请先选择要删除的行")
             return
-        
-        # 获取所有选中行的索引（去重）
         rows_to_remove = sorted(set(index.row() for index in selected_indexes), reverse=True)
-        
         if self.model.rowCount() <= len(rows_to_remove):
             QMessageBox.warning(self, "操作错误", "至少需要保留一行")
             return
-        
-        # 从大到小删除，避免索引变化导致错误
         for row in rows_to_remove:
-            self.model.removeRow(row)
-    
+            command = RemoveRowCommand(self.model, row)
+            self.command_manager.execute(command)
+
     def add_column(self):
-        """在选中区域右侧添加新列"""
         selected_indexes = self.tableView.selectedIndexes()
         col = max(index.column() for index in selected_indexes) + 1 if selected_indexes else self.model.columnCount()
-        self.model.insertColumn(col)
-    
+        command = AddColumnCommand(self.model, col)
+        self.command_manager.execute(command)
+
     def remove_column(self):
-        """删除所有选中列"""
         selected_indexes = self.tableView.selectedIndexes()
         if not selected_indexes:
             QMessageBox.warning(self, "操作错误", "请先选择要删除的列")
             return
-        
-        # 获取所有选中列的索引（去重）
         cols_to_remove = sorted(set(index.column() for index in selected_indexes), reverse=True)
-        
         if self.model.columnCount() <= len(cols_to_remove):
             QMessageBox.warning(self, "操作错误", "至少需要保留一列")
             return
-        
-        # 从大到小删除，避免索引变化导致错误
         for col in cols_to_remove:
-            self.model.removeColumn(col)
-    
+            command = RemoveColumnCommand(self.model, col)
+            self.command_manager.execute(command)
+
     def select_rows(self):
         """选择所有选中单元格所在的行"""
         selected_indexes = self.tableView.selectedIndexes()

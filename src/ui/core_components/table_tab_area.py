@@ -12,14 +12,14 @@ class PlotArea(QWidget):
         self.main_window = parent
         
         # 创建标签页实例
-        self.parent_table_tab = ParentTableTab(self)
+        self.parent_table_tab = ParentTableTab(self, self.main_window)
         
         self.init_ui()
     
     def init_ui(self):
         layout = QVBoxLayout(self)
-        
         layout.addWidget(self.parent_table_tab)
+        self.setLayout(layout)
     
     def get_current_table_container(self):
         """获取当前激活的表格标签页的数据容器"""

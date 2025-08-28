@@ -31,6 +31,7 @@ class TabSignals(QObject):
     table_tab_created = pyqtSignal(str, str)  # (uuid, 名称)
     table_tab_closed = pyqtSignal(str)        # 关闭的标签页UUID
     activate_table_tab = pyqtSignal(str)      # 请求激活的表格标签页UUID
+    table_tab_renamed = pyqtSignal(str, str)  # 标签页重命名信号 - 参数: 标签页UUID、名称
 
     # 缩略图标签信号
     thumbnnail_clicked = pyqtSignal(str)      # 缩略图点击信号 - 参数: 缩略图UUID
