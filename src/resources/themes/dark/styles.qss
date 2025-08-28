@@ -14,7 +14,7 @@ QMainWindow {
 }
 
 QFrame {
-    border: 1px solid #444444;
+    border: none;
     border-radius: 4px;
     background-color: #1e1e1e;
 }
@@ -22,7 +22,7 @@ QFrame {
 QPushButton {
     background-color: #2d2d2d;
     color: #f2f2f2;
-    border: 1px solid #444444;
+    border: none;
     border-radius: 4px;
     padding: 8px 12px;
     font-weight: normal;
@@ -55,7 +55,7 @@ QPushButton.primary:hover {
 }
 
 QLineEdit, QTextEdit, QPlainTextEdit {
-    border: 1px solid #444444;
+    border: none;
     border-radius: 4px;
     padding: 8px;
     background-color: #2d2d2d;
@@ -68,7 +68,7 @@ QLineEdit:focus, QTextEdit:focus, QPlainTextEdit:focus {
 }
 
 QComboBox {
-    border: 1px solid #444444;
+    border: none;
     border-radius: 4px;
     padding: 8px;
     background: transparent;
@@ -85,7 +85,7 @@ QComboBox::drop-down {
 }
 
 QSlider::groove:horizontal {
-    border: 1px solid #444444;
+    border: none;
     height: 6px;
     background: #2d2d2d;
     border-radius: 3px;
@@ -101,7 +101,7 @@ QSlider::handle:horizontal {
 
 QTabBar::tab {
     background: #2d2d2d;
-    border: 1px solid #444444;
+    border: none;
     border-bottom: none;
     padding: 8px 12px;
     margin-right: 2px;
@@ -121,7 +121,7 @@ QMenuBar {
 
 QMenu {
     background-color: #1e1e1e;
-    border: 1px solid #444444;
+    border: none;
     border-radius: 4px;
 }
 
@@ -136,14 +136,14 @@ QTableView, QTableWidget {
     alternate-background-color: #3d3d3d;
     selection-background-color: #4ca6ff;
     selection-color: #f2f2f2;
-    border: 1px solid #444444;
+    border: none;
     border-radius: 4px;
 }
 
 QHeaderView::section {
     background-color: #3d3d3d;
     padding: 8px;
-    border: 1px solid #444444;
+    border: none;
     font-weight: bold;
 }
 
@@ -163,7 +163,7 @@ QScrollBar::handle:vertical {
 QToolTip {
     background-color: #1e1e1e;
     color: #f2f2f2;
-    border: 1px solid #444444;
+    border: none;
     border-radius: 4px;
     padding: 8px;
 }
@@ -188,7 +188,7 @@ QSplitter::handle:hover {
 /* 数据概览区样式 */
 LeftZoneDataOverview {
     background-color: #1e1e1e;
-    border: 1px solid #444444;
+    border: none;
     border-radius: 4px;
 }
 
@@ -200,7 +200,7 @@ LeftZoneDataOverview QTreeWidget {
 
 LeftZoneDataOverview QTreeWidget::item {
     height: 40px;
-    border: 1px solid #444444;
+    border: none;
     border-radius: 4px;
     margin: 3px;
     padding: 3px;
@@ -220,7 +220,7 @@ QTableView, QTableWidget {
     alternate-background-color: #3d3d3d;
     selection-background-color: #4ca6ff;
     selection-color: #f2f2f2;
-    border: 1px solid #444444;
+    border: none;
     border-radius: 4px;
     color: #f2f2f2;
 }
@@ -228,7 +228,7 @@ QTableView, QTableWidget {
 QHeaderView::section {
     background-color: #3d3d3d;
     padding: 8px;
-    border: 1px solid #444444;
+    border: none;
     font-weight: bold;
     color: #f2f2f2;
 }
@@ -236,13 +236,13 @@ QHeaderView::section {
 /* 属性面板样式 */
 PropertyPanel {
     background-color: #1e1e1e;
-    border: 1px solid #444444;
+    border: none;
     border-radius: 4px;
 }
 
 PropertyPanel QGroupBox {
     color: #f2f2f2;
-    border: 1px solid #444444;
+    border: none;
     border-radius: 4px;
     margin-top: 10px;
     padding-top: 10px;
@@ -256,13 +256,13 @@ PropertyPanel QGroupBox::title {
 
 /* 标签页样式 */
 QTabWidget::pane {
-    border: 1px solid #444444;
+    border: none;
     background-color: #1e1e1e;
 }
 
 QTabBar::tab {
     background: #2d2d2d;
-    border: 1px solid #444444;
+    border: none;
     border-bottom: none;
     padding: 8px 12px;
     margin-right: 2px;
@@ -285,7 +285,7 @@ QTabBar::tab:hover {
 QPushButton {
     background-color: #2d2d2d;
     color: #f2f2f2;
-    border: 1px solid #444444;
+    border: none;
     border-radius: 4px;
     padding: 8px 12px;
     font-weight: normal;
@@ -333,7 +333,7 @@ QMenuBar::item:pressed {
 QMenu {
     background-color: #1e1e1e;
     color: #f2f2f2;
-    border: 1px solid #444444;
+    border: none;
     border-radius: 4px;
 }
 
@@ -355,13 +355,13 @@ QMenu::separator {
 /* 属性面板样式 */
 PropertyPanel {
     background-color: #1e1e1e;
-    border: 1px solid #444444;
+    border: none;
     border-radius: 4px;
 }
 
 PropertyPanel QGroupBox {
     color: #f2f2f2;
-    border: 1px solid #444444;
+    border: none;
     border-radius: 4px;
     margin-top: 10px;
     padding-top: 10px;
@@ -381,7 +381,7 @@ PropertyPanel QLabel {
 PropertyPanel QLineEdit, PropertyPanel QComboBox, PropertyPanel QTextEdit, PropertyPanel QPlainTextEdit {
     background-color: #2d2d2d;
     color: #f2f2f2;
-    border: 1px solid #444444;
+    border: none;
     border-radius: 4px;
     padding: 5px;
 }
@@ -389,7 +389,7 @@ PropertyPanel QLineEdit, PropertyPanel QComboBox, PropertyPanel QTextEdit, Prope
 PropertyPanel QPushButton {
     background-color: #2d2d2d;
     color: #f2f2f2;
-    border: 1px solid #444444;
+    border: none;
     border-radius: 4px;
     padding: 5px 10px;
 }
@@ -414,7 +414,7 @@ LeftZoneDataOverview QTreeWidget {
 
 LeftZoneDataOverview QTreeWidget::item {
     height: 40px;
-    border: 1px solid #444444;
+    border: none;
     border-radius: 4px;
     margin: 3px;
     padding: 3px;

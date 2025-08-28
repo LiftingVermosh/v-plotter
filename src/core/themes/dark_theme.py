@@ -65,26 +65,6 @@ class DarkTheme(BaseTheme):
 
     def apply_to_widget(self, widget):
         """将主题应用到特定部件及其所有子部件"""
-        # # 设置部件样式表
-        # widget.setStyleSheet(self.stylesheet)
-        
-        # # 设置部件调色板
-        # palette = widget.palette()
-        # palette.setColor(QPalette.ColorRole.Window, QColor(30, 30, 30))
-        # palette.setColor(QPalette.ColorRole.WindowText, QColor(242, 242, 242))
-        # widget.setPalette(palette)
-        
-        # # 递归应用样式到所有子部件
-        # for child in widget.findChildren(QWidget):
-        #     try:
-        #         child.setStyleSheet(self.stylesheet)
-        #         child_palette = child.palette()
-        #         child_palette.setColor(QPalette.ColorRole.Window, QColor(30, 30, 30))
-        #         child_palette.setColor(QPalette.ColorRole.WindowText, QColor(242, 242, 242))
-        #         child.setPalette(child_palette)
-        #     except:
-        #         pass
-        
         # 强制更新部件
         widget.style().unpolish(widget)
         widget.style().polish(widget)
