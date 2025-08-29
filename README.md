@@ -56,9 +56,17 @@
 
 ```text
 v-plotter/
+├── main.py                # 应用程序入口点
+├── LICENSE               # 许可证文件
+├── requirements.txt      # 项目依赖
+├── setup.py             # 安装脚本
+├── pytest.ini           # pytest配置
+├── README.md            # 项目说明文档
+└── __init__.py          
 ├── src/                    # 源代码目录
 │   ├── core/              # 核心功能模块
 │   │   ├── base_theme.py          # 抽象主题基类
+│   │   ├── command_manager.py     # 命令管理
 │   │   ├── data_container.py      # 数据容器管理
 │   │   ├── font_manager.py        # 字体管理
 │   │   ├── settings_manager.py    # 设置管理
@@ -68,7 +76,7 @@ v-plotter/
 │   │       ├── dark_theme.py      # 深色主题实现
 │   │       └── light_theme.py     # 浅色主题实现
 │   ├── resources/         # 资源文件目录
-│   │   ├── icons/                # 图标资源
+│   │   ├── icons/                # 图标资源目录
 │   │   └── themes/               # 主题资源目录
 │   │       ├── dark/             # 深色主题资源
 │   │       │   ├── styles.qss           # 深色主题样式表
@@ -78,32 +86,34 @@ v-plotter/
 │   │           └── theme.json         # 浅色主题配置
 │   ├── ui/                # 用户界面模块
 │   │   ├── core_components/       # 核心UI组件
-│   │   │   ├── left_zone_data_overview.py     # 左侧数据概览区
-│   │   │   ├── right_up_zone_plotarea.py      # 右上绘图区域
-│   │   │   └── table_view_tab.py              # 表格视图标签页
+│   │   │   ├── data_overview.py       # 数据概览组件
+│   │   │   ├── parent_table_tab.py    # 父表格标签页
+│   │   │   ├── table_tab_area.py      # 表格标签区域
+│   │   │   ├── table_view_tab.py      # 表格视图标签页
+│   │   │   └── __init__.py            
 │   │   ├── dialogs/               # 对话框组件
 │   │   │   ├── data_interface_tab.py      # 数据界面设置标签页
-│   │   │   ├── plot_settings_tab.py       # 绘图参数设置标签页
-│   │   │   ├── preferences_dialog.py      # 偏好设置对话框
-│   │   │   └── theme_dialog.py            # 主题设置对话框
+│   │   │   ├── filter_dialogs.py         # 过滤对话框
+│   │   │   ├── find_replace_dialogs.py   # 查找替换对话框
+│   │   │   ├── plot_settings_tab.py      # 绘图参数设置标签页
+│   │   │   ├── preferences_dialog.py     # 偏好设置对话框
+│   │   │   └── theme_dialog.py           # 主题设置对话框
 │   │   ├── menu_components/       # 菜单组件
 │   │   │   ├── edit_menu.py       # 编辑菜单
 │   │   │   ├── file_menu.py       # 文件菜单
 │   │   │   ├── help_menu.py       # 帮助菜单
 │   │   │   ├── tools_menu.py      # 工具菜单
-│   │   │   └── view_menu.py       # 视图菜单
+│   │   │   ├── view_menu.py       # 视图菜单
+│   │   │   └── __init__.py        
 │   │   ├── theme_components/      # 主题相关组件
 │   │   │   └── styled_widgets.py  # 样式化部件
 │   │   ├── chart_windows.py       # 图表窗口
 │   │   ├── main_window.py         # 主窗口
 │   │   └── menu.py                # 菜单栏
-│   └── utils/             # 工具函数
-├── test/                  # 测试目录
-│   └── data/              # 测试数据
-├── main.py                # 应用程序入口点
-├── requirements.txt       # 项目依赖
-├── setup.py              # 安装脚本
-└── README.md             # 项目说明文档
+│   └── utils/             # 工具函数目录
+└── test/                  # 测试目录
+    ├── __init__.py        
+    └── data/              # 测试数据
 ```
 
 ## 使用说明
