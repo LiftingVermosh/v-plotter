@@ -1,13 +1,18 @@
 # src/ui/core_components/table_view_tab.py
-from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QTableView, QAbstractItemView, 
-                             QPushButton, QHBoxLayout, QHeaderView, QMessageBox,
-                             QInputDialog, QMenu, QLineEdit, QStyledItemDelegate,
-                             QApplication, QStyleOptionViewItem, QStyle)
+from typing import Optional, List, Dict, Any, Set
+import numpy as np
+import pandas as pd
+from PyQt6.QtWidgets import (
+    QWidget, QVBoxLayout, QTableView, QAbstractItemView, 
+    QPushButton, QHBoxLayout, QHeaderView, QMessageBox,
+    QInputDialog, QMenu, QLineEdit, QStyledItemDelegate,
+    QApplication, QStyleOptionViewItem, QStyle
+)
 from PyQt6.QtCore import QAbstractTableModel, Qt, QModelIndex, QPoint
 from PyQt6.QtGui import QKeySequence, QShortcut, QClipboard, QBrush, QColor, QFont
 from src.core.signals import data_signals, theme_signals, tab_signals
 from src.core.command_manager import EditCellCommand, AddRowCommand, RemoveRowCommand, AddColumnCommand, RemoveColumnCommand
-import numpy as np
+from src.core.data_container import DataContainer
 import re
 
 class NumericDelegate(QStyledItemDelegate):
@@ -58,7 +63,7 @@ class NumericDelegate(QStyledItemDelegate):
         #         model.setData(index, 0.0, Qt.ItemDataRole.EditRole)  # 空文本设置为0.0
 
 class TableModel(QAbstractTableModel):
-    """自定义表格模型，第一列支持字符串，其他列支持数值"""
+    """自定义表格模型，支持混合数据类型"""
     def __init__(self, data=None, headers=None, parent=None):
         super().__init__(parent)
         self._headers = headers or ["列1", "列2"]
@@ -75,26 +80,26 @@ class TableModel(QAbstractTableModel):
                 for j in range(self._data.shape[1]):
                     if j == 0:
                         self._data[i, j] = "\"请输入数值或文本\""  # 第一列
-                        
                     else:
                         self._data[i, j] = 0.0  # 其他列0.0
         
         self.modified = False
     
-    def rowCount(self, parent=QModelIndex()):
+    def rowCount(self, parent=QModelIndex()) -> int:
         return self._data.shape[0]
     
-    def columnCount(self, parent=QModelIndex()):
+    def columnCount(self, parent=QModelIndex()) -> int:
         return self._data.shape[1]
     
-    def data(self, index, role=Qt.ItemDataRole.DisplayRole):
+    def data(self, index, role=Qt.ItemDataRole.DisplayRole) -> Any:
         if not index.isValid():
             return None
         
         row, col = index.row(), index.column()
         
         if role == Qt.ItemDataRole.DisplayRole:
-            return str(self._data[row, col])
+            value = self._data[row, col]
+            return str(value) if value is not None else ""
         elif role == Qt.ItemDataRole.EditRole:
             return self._data[row, col]
         elif role == Qt.ItemDataRole.TextAlignmentRole:
@@ -114,7 +119,7 @@ class TableModel(QAbstractTableModel):
 
         return None
     
-    def setData(self, index, value, role=Qt.ItemDataRole.EditRole):
+    def setData(self, index, value, role=Qt.ItemDataRole.EditRole) -> bool:
         if role == Qt.ItemDataRole.EditRole and index.isValid():
             row, col = index.row(), index.column()
             old_value = self._data[row, col]
@@ -136,17 +141,17 @@ class TableModel(QAbstractTableModel):
                 return True
         return False
     
-    def headerData(self, section, orientation, role=Qt.ItemDataRole.DisplayRole):
-        """ 表头数据 """
+    def headerData(self, section, orientation, role=Qt.ItemDataRole.DisplayRole) -> Any:
+        """表头数据"""
         if role == Qt.ItemDataRole.DisplayRole:
             if orientation == Qt.Orientation.Horizontal:
-                return self._headers[section]
+                return self._headers[section] if section < len(self._headers) else ""
             else:
                 return str(section + 1)  # 行号从1开始
         return None
     
-    def setHeaderData(self, section, orientation, value, role=Qt.ItemDataRole.EditRole):
-        """ 设置表头数据 """
+    def setHeaderData(self, section, orientation, value, role=Qt.ItemDataRole.EditRole) -> bool:
+        """设置表头数据"""
         if role == Qt.ItemDataRole.EditRole and orientation == Qt.Orientation.Horizontal:
             if 0 <= section < len(self._headers):
                 self._headers[section] = value
@@ -155,11 +160,11 @@ class TableModel(QAbstractTableModel):
                 return True
         return False
     
-    def flags(self, index):
+    def flags(self, index) -> Qt.ItemFlag:
         return super().flags(index) | Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsSelectable
     
     # 行列操作
-    def insertRow(self, row):
+    def insertRow(self, row: int) -> bool:
         self.beginInsertRows(QModelIndex(), row, row)
         
         # 创建新行，第一列为空字符串，其他为0.0
@@ -178,7 +183,7 @@ class TableModel(QAbstractTableModel):
         data_signals.data_modified.emit(self._data.copy(), self._headers.copy())   
         return True
     
-    def removeRow(self, row):
+    def removeRow(self, row: int) -> bool:
         if self.rowCount() <= 1:
             return False
             
@@ -189,10 +194,18 @@ class TableModel(QAbstractTableModel):
         data_signals.data_modified.emit(self._data.copy(), self._headers.copy())   
         return True
     
-    def insertColumn(self, col, header=None):
+    def insertColumn(self, col: int, header: Optional[str] = None) -> bool:
         if header is None:
             y_cols = [h for h in self._headers if h.startswith("列")]
-            max_num = max([int(re.search(r'\d+', h).group()) for h in y_cols if re.search(r'\d+', h)] or [0])
+            max_num = 0
+            if y_cols:
+                numbers = []
+                for h in y_cols:
+                    try:
+                        numbers.append(int(h[1:]))
+                    except ValueError:
+                        pass
+                max_num = max(numbers) if numbers else 0
             header = f"列{max_num + 1}"
         
         self.beginInsertColumns(QModelIndex(), col, col)
@@ -208,7 +221,7 @@ class TableModel(QAbstractTableModel):
         data_signals.data_modified.emit(self._data.copy(), self._headers.copy())   
         return True
     
-    def removeColumn(self, col):
+    def removeColumn(self, col: int) -> bool:
         if self.columnCount() <= 1:
             return False
             
@@ -220,7 +233,7 @@ class TableModel(QAbstractTableModel):
         data_signals.data_modified.emit(self._data.copy(), self._headers.copy())   
         return True
     
-    def get_data(self):
+    def get_data(self) -> tuple:
         """返回表格数据和列标题"""
         return self._data.copy(), self._headers.copy()
     
@@ -228,32 +241,33 @@ class TableModel(QAbstractTableModel):
         """清除修改状态"""
         self.modified = False
 
-
 class TableViewTab(QWidget):
-    """ 单个表格视图标签页 """
-    def __init__(self, container, main_window=None, parent=None):
+    """单个表格视图标签页"""
+    def __init__(self, container: DataContainer, main_window=None, parent=None):
         super().__init__(parent)
         self.container = container
         self.main_window = main_window
-        self.command_manager = main_window.get_command_manager()
-        self.model = None
+        self.command_manager = main_window.get_command_manager() if main_window else None
+        self.model: Optional[TableModel] = None
         self.init_ui()
         self.setup_shortcuts()
+        
+        # 连接信号
         tab_signals.table_tab_renamed.connect(self.on_tab_renamed)
         data_signals.data_modified.connect(self.update_container_data)
         theme_signals.theme_changed.connect(self.on_theme_changed)
 
-    def on_tab_renamed(self, uuid, name):
+    def on_tab_renamed(self, uuid: str, name: str):
         """处理标签页重命名事件"""
         if self.container.uuid == uuid:
             self.container.name = name
 
     def update_container_data(self, data, headers):
         """更新容器数据"""
-        self.container.set_table_data(data, headers)
-
-        # 调试行为
-        # print(f"数据已更新至容器: {self.container.uuid}\n内容:\n{headers}\n{data} ")
+        try:
+            self.container.set_table_data(data, headers)
+        except Exception as e:
+            QMessageBox.warning(self, "错误", f"更新容器数据失败: {str(e)}")
 
     def init_ui(self):
         """初始化UI"""
@@ -299,8 +313,9 @@ class TableViewTab(QWidget):
         self.tableView.setModel(self.model)
         
         # 设置自定义委托
-        self.delegate = NumericDelegate(self.command_manager)
-        self.tableView.setItemDelegate(self.delegate)
+        if self.command_manager:
+            self.delegate = NumericDelegate(self.command_manager)
+            self.tableView.setItemDelegate(self.delegate)
         
         layout.addLayout(button_layout)
         layout.addWidget(self.tableView)
@@ -337,21 +352,27 @@ class TableViewTab(QWidget):
     
     def load_data(self):
         """从容器加载数据，支持混合类型"""
-        if self.container and self.container.table_data is not None:
-            data_array = self.container.get_table_data_as_numpy()
-            headers = self.container.column_headers
-            
-            if len(data_array.shape) == 1:
-                data_array = data_array.reshape(-1, 1)
-            
-            # 不再强制转换为float，直接使用对象类型
-            self.model.beginResetModel()
-            self.model._data = data_array.astype(object)  # 确保对象类型
-            self.model._headers = headers
-            self.model.endResetModel()
-            
-            self.model.clear_modified()
-            
+        if self.container and self.container.dataframe is not None:
+            try:
+                data_array = self.container.get_table_data_as_numpy()
+                headers = self.container.get_table_headers()
+                
+                if data_array is None:
+                    return
+                
+                if len(data_array.shape) == 1:
+                    data_array = data_array.reshape(-1, 1)
+                
+                # 不再强制转换为float，直接使用对象类型
+                self.model.beginResetModel()
+                self.model._data = data_array.astype(object)  # 确保对象类型
+                self.model._headers = headers
+                self.model.endResetModel()
+                
+                self.model.clear_modified()
+                
+            except Exception as e:
+                QMessageBox.warning(self, "错误", f"加载数据失败: {str(e)}")          
     
     def update_properties(self, properties):
         """更新属性并刷新视图"""
@@ -769,3 +790,5 @@ class TableViewTab(QWidget):
         """主题切换时刷新视图"""
         self.tableView.setStyleSheet("")
         self.tableView.viewport().update()
+
+    

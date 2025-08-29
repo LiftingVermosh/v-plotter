@@ -5,13 +5,14 @@ import os
 import json
 import pandas as pd
 import numpy as np
+from typing import Optional, List, Any
 from PyQt6.QtWidgets import QMenu, QFileDialog, QMessageBox, QWidget
 from PyQt6.QtGui import QKeySequence
 from src.core.data_container import DataContainer
 from src.core.signals import container_signals, tab_signals
 
 class FileMenu(QMenu):
-    def __init__(self, parent=None, main_window = None):
+    def __init__(self, parent=None, main_window=None):
         super().__init__("&文件", parent)
         self.main_window = main_window
         
@@ -41,56 +42,48 @@ class FileMenu(QMenu):
         if self.main_window:
             # 新建数据容器
             container_signals.container_created.emit()
-            # print("新建数据容器")
         else:
             QMessageBox.warning(self.main_window, "错误", "无法访问主窗口")
 
     def open_file(self):
-        """ 打开文件并进行操作 """
-        file_dialog = QFileDialog(self, "打开文件")
-
-        file_path, _ = file_dialog.getOpenFileName(
-            parent = self, 
-            caption = "打开文件", 
-            directory = "", 
-            filter = "csv文件(*.csv);;xlsx文件(*.xlsx, *.xls);;json文件(*.json)"
-        )
-
-        if file_path:
-            try:
-                # 加载文件拓展名，并根据拓展名调用相应的加载函数
-                extensions = os.path.splitext(file_path)[1].lower()
-
-                # 创建数据容器
-                container = DataContainer()
-                container.name =   os.path.splitext(file_path)[0].lower().split("/")[-1]
-                container.source = file_path
-                container.data_type = extensions.replace(".", "")
-
-                # 加载数据
-                if extensions == ".csv":
-                    self.load_csv(file_path, container)
-                elif extensions == ".xlsx":
-                    self.load_excel(file_path, container)
-                elif extensions == ".json":
-                    self.load_json(file_path, container)
-                else:
-                    QMessageBox.warning(self.main_window, "错误", "不支持的文件类型\t")
-                    return
-                
-                # 检查数据有效性
-                if container.table_data is None:
-                    QMessageBox.warning(self.main_window, "错误", "文件内容为空\t")
-                    return
-                
-                # 通知主窗口更新数据容器
-                container_signals.container_ready.emit(container)
-
-            except Exception as e:
-                QMessageBox.warning(self.main_window, "错误", f"打开文件失败：{e}\t")
-        else:
-            # 用户取消操作
-            pass
+        """打开文件并进行操作"""
+        try:
+            file_dialog = QFileDialog(self, "打开文件")
+            file_path, _ = file_dialog.getOpenFileName(
+                parent=self, 
+                caption="打开文件", 
+                directory="", 
+                filter="所有支持的文件(*.csv *.xlsx *.xls *.json);;csv文件(*.csv);;xlsx文件(*.xlsx, *.xls);;json文件(*.json)"
+            )
+            if not file_path:
+                return  # 用户取消操作
+            # 加载文件拓展名，并根据拓展名调用相应的加载函数
+            extension = os.path.splitext(file_path)[1].lower()
+            # 创建数据容器
+            container = DataContainer()
+            container.name = os.path.splitext(os.path.basename(file_path))[0]
+            container.source = file_path
+            container.data_type = extension.replace(".", "")
+            # 加载数据
+            if extension == ".csv":
+                self.load_csv(file_path, container)
+            elif extension in [".xlsx", ".xls"]:
+                self.load_excel(file_path, container)
+            elif extension == ".json":
+                self.load_json(file_path, container)
+            else:
+                QMessageBox.warning(self.main_window, "错误", "不支持的文件类型")
+                return
+            
+            # 检查数据有效性
+            if container.dataframe is None or container.dataframe.empty:
+                QMessageBox.warning(self.main_window, "警告", "文件内容为空或格式不正确")
+                return
+            
+            # 通知主窗口更新数据容器
+            container_signals.container_ready.emit(container)
+        except Exception as e:
+            QMessageBox.warning(self.main_window, "错误", f"打开文件失败：{str(e)}")
 
     ## open选项下函数
     def load_csv(self, file_path, container):

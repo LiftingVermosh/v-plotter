@@ -99,7 +99,7 @@ class ChartWindow(QDialog):
             return
         
         data_array = self.container.get_table_data_as_numpy()
-        headers = self.container.column_headers
+        headers = self.container.get_table_headers()
         
         # 确保数据是二维的
         if not data_array.any():
