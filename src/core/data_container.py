@@ -63,6 +63,20 @@ class DataContainer:
             self._clear_data()
             raise ValueError(f"无法将数据转换为DataFrame: {e}")
     
+    def sort_data(self, column: str, ascending: bool = True) -> bool:
+        """对数据进行排序"""
+        if self.dataframe is None:
+            return False
+        
+        try:
+            # 排序
+            self.dataframe = self.dataframe.sort_values(by=column, ascending=ascending)
+            self.update_stats()
+            return True
+        except Exception as e:
+            QMessageBox.warning(f"排序失败: {e}")
+            return False
+
     def _clear_data(self):
         """清除数据"""
         self.dataframe = None

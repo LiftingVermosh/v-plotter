@@ -5,8 +5,9 @@ from PyQt6.QtWidgets import QMenu, QMessageBox
 from PyQt6.QtGui import QIcon, QAction
 from src.core.signals import plot_signals
 from src.ui.chart_windows import ChartWindow
-from src.ui.dialogs.filter_dialogs import FilterDialog
+from src.ui.dialogs.filter_dialog import FilterDialog
 from src.ui.dialogs.preferences_dialog import PreferencesDialog
+from src.ui.dialogs.sort_dialog import SortDialog
 
 class ToolsMenu(QMenu):
     def __init__(self, parent=None, main_window=None):
@@ -103,12 +104,24 @@ class ToolsMenu(QMenu):
         # 实现数据过滤逻辑
         current_container = self.main_window.plot_area.get_current_table_container()
         fitler_dialog = FilterDialog(current_container, self.main_window)
-        fitler_dialog.exec()  # 调用 exec() 方法显示对话框
+        if not fitler_dialog.hasError:
+            fitler_dialog.exec()  # 调用 exec() 方法显示对话框
 
     def sort_data(self):
         """数据排序"""
         # 实现数据排序逻辑
-        pass
+        current_container = self.main_window.plot_area.get_current_table_container()
+        sort_dialog = SortDialog(current_container, self.main_window)
+        if not sort_dialog.hasError:
+            if sort_dialog.exec():  # 调用 exec() 方法显示对话框
+                column, ascenfing = sort_dialog.get_sort_options()
+                if current_container.sort_data(column, ascenfing):
+                    current_tab = self.main_window.plot_area.get_current_table_tab()
+                    if current_tab:
+                        current_tab.load_data()
+                        QMessageBox.information(self.main_window, "提示", "数据已排序！")
+                else:
+                    QMessageBox.warning(self.main_window, "警告", "排序失败！")
 
     def clean_data(self):
         """数据清洗"""

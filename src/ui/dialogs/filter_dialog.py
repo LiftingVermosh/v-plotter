@@ -9,6 +9,7 @@ from PyQt6.QtGui import QDoubleValidator, QIntValidator
 class FilterDialog(QDialog):
     def __init__(self, data_container, parent=None):
         super().__init__(parent)        
+        self.hasError = False                   # 是否有错误
         self.data_container = data_container    # 数据容器
         self.current_column = None             # 当前选择的列
         self.current_column_type = None        # 当前选择的列的类型
@@ -19,14 +20,14 @@ class FilterDialog(QDialog):
         # 检查数据容器是否有效
         if self.data_container is None or not hasattr(self.data_container, 'get_table_headers'):
             QMessageBox.critical(self, "错误", "无效的数据容器！")
-            self.reject()  # 直接关闭对话框
+            self.hasError = True
             return
             
         column_names = self.data_container.get_table_headers()
 
         if not column_names or len(column_names) == 0:
             QMessageBox.warning(self, "警告", "数据表中没有可用的列！")
-            self.reject()  # 直接关闭对话框
+            self.hasError = True
             return
         
         # 如果数据有效，初始化UI
