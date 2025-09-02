@@ -12,7 +12,6 @@ class ThemeDialog(QDialog):
         self.settings_manager = self.main_window.settings_manager
         self.current_themes = self.theme_manager.get_available_themes()
         self.setWindowTitle('主题设置')
-        self.resize(200, 100)
         self.init_ui()
         
         # 设置当前选中的主题
