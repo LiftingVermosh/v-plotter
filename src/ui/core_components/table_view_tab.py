@@ -363,16 +363,17 @@ class TableViewTab(QWidget):
                 if len(data_array.shape) == 1:
                     data_array = data_array.reshape(-1, 1)
                 
-                # 不再强制转换为float，直接使用对象类型
-                self.model.beginResetModel()
+                # 直接使用对象类型
+                self.model.beginResetModel()  # 开始重置模型
                 self.model._data = data_array.astype(object)  # 确保对象类型
                 self.model._headers = headers
-                self.model.endResetModel()
+                self.model.endResetModel()  # 结束重置模型，触发视图更新
                 
                 self.model.clear_modified()
                 
             except Exception as e:
-                QMessageBox.warning(self, "错误", f"加载数据失败: {str(e)}")          
+                QMessageBox.warning(self, "错误", f"加载数据失败: {str(e)}")
+       
     
     def update_properties(self, properties):
         """更新属性并刷新视图"""

@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import uuid
 from PyQt6.QtWidgets import QMessageBox
-from src.core.signals import container_signals
+from src.core.signals import container_signals, data_signals
 from typing import Optional, List, Dict, Any, Union
 
 class DataContainer:
@@ -76,6 +76,73 @@ class DataContainer:
         except Exception as e:
             QMessageBox.warning(f"排序失败: {e}")
             return False
+
+    def clean_data(self, column: str, sensitive: bool = False, target: str = '0') -> bool:
+        """清洗异常值"""
+        if self.dataframe is None:
+            QMessageBox.warning(None, "错误", "数据为空，无法清洗")
+            return False
+        
+        if column not in self.dataframe.columns:
+            QMessageBox.warning(None, "错误", f"列 '{column}' 不存在")
+            return False
+        
+        try:
+            # 保存原始数据类型
+            origin_dtype = self.dataframe[column].dtype
+            
+            # 处理数值列和字符串列的不同情况
+            if pd.api.types.is_numeric_dtype(origin_dtype):
+                # 数值列处理
+                try:
+                    target_value = float(target)
+                except ValueError:
+                    QMessageBox.warning(None, "错误", f"对于数值列 '{column}'，替换值 '{target}' 不是有效的数字")
+                    return False
+                    
+                if sensitive:
+                    # 严格清洗：替换NaN和无限值
+                    self.dataframe[column] = self.dataframe[column].replace(
+                        [np.nan, np.inf, -np.inf], target_value
+                    )
+                else:
+                    # 宽松清洗：只替换NaN
+                    self.dataframe[column] = self.dataframe[column].fillna(target_value)
+            else:
+                # 字符串列处理
+                # 先将列转换为字符串
+                self.dataframe[column] = self.dataframe[column].astype(str)
+                
+                # 定义要替换的值列表
+                if sensitive:
+                    to_replace = ['', 'nan', 'None', 'null', 'NaN', 'NA', 'N/A']
+                else:
+                    to_replace = ['', 'None', 'null']
+                
+                # 执行替换
+                self.dataframe[column] = self.dataframe[column].replace(to_replace, target)
+                
+                # 尝试转换回原始数据类型（如果是其他非字符串类型）
+                try:
+                    self.dataframe[column] = self.dataframe[column].astype(origin_dtype)
+                except (ValueError, TypeError):
+                    # 如果转换失败，保持为字符串类型
+                    pass
+            
+            self.update_stats()
+            
+            # 发出数据修改信号
+            data_signals.data_modified.emit(
+                self.dataframe.to_numpy().copy(), 
+                self.get_table_headers().copy()
+            )
+            
+            return True
+        except Exception as e:
+            QMessageBox.warning(None, "错误", f"清洗失败: {e}")
+            return False
+
+
 
     def _clear_data(self):
         """清除数据"""
