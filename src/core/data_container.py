@@ -396,3 +396,133 @@ class DataContainer:
     
     def __repr__(self):
         return f"DataContainer(name={self.name}, shape=({self.row_count}, {self.column_count}), source={self.source})"
+
+    def convert_data(self, options):
+        """转换数据"""
+        choosed_option = options.get('choosed_option')
+        
+        if choosed_option == "数据类型转换":
+            return self.convert_data_type(options)
+        elif choosed_option == "数据标准化":
+            return self.normalize_data(options)
+        else:
+            QMessageBox.warning(None, "错误", f"不支持的转换类型: {choosed_option}")
+            return False
+
+    def convert_data_type(self, options):
+        """转换数据类型"""
+        try:
+            column_name = options['column']
+            target_type = options['target_type']
+            format_str = options.get('format', None)
+            
+            # 映射中文类型到实际类型
+            type_map = {
+                '整数': 'int',
+                '浮点数': 'float', 
+                '字符串': 'str',
+                '布尔值': 'bool',
+                '日期时间': 'datetime'
+            }
+            
+            if target_type not in type_map:
+                QMessageBox.warning(None, "错误", f"不支持的目标类型: {target_type}")
+                return False
+                
+            actual_type = type_map[target_type]
+            
+            if actual_type == 'int':
+                self.dataframe[column_name] = pd.to_numeric(self.dataframe[column_name], errors='coerce').astype('Int64')
+            elif actual_type == 'float':
+                self.dataframe[column_name] = pd.to_numeric(self.dataframe[column_name], errors='coerce')
+            elif actual_type == 'str':
+                self.dataframe[column_name] = self.dataframe[column_name].astype(str)
+            elif actual_type == 'bool':
+                # 布尔值转换逻辑
+                self.dataframe[column_name] = self.dataframe[column_name].astype(bool)
+            elif actual_type == 'datetime':
+                # 日期时间转换逻辑
+                if format_str:
+                    self.dataframe[column_name] = pd.to_datetime(self.dataframe[column_name], format=format_str, errors='coerce')
+                else:
+                    self.dataframe[column_name] = pd.to_datetime(self.dataframe[column_name], errors='coerce')
+            
+            self.update_stats()
+            data_signals.data_modified.emit(
+                self.dataframe.to_numpy().copy(), 
+                self.get_table_headers().copy()
+            )
+            return True
+            
+        except Exception as e:
+            QMessageBox.warning(None, "错误", f"数据类型转换失败: {e}")
+            return False
+
+    def normalize_data(self, options):
+        """标准化数据"""
+        try:
+            column_name = options['column']
+            method = options['method']
+            min_val = options.get('min', 0)
+            max_val = options.get('max', 1)
+            
+            # 映射中文方法名到实际方法
+            method_map = {
+                '最小-最大缩放': 'min_max',
+                'Z-score标准化': 'z_score',
+                '小数定标标准化': 'decimal_scaling',
+                '对数变换': 'log'
+            }
+            
+            if method not in method_map:
+                QMessageBox.warning(None, "错误", f"不支持的标准化方法: {method}")
+                return False
+                
+            actual_method = method_map[method]
+            
+            # 确保列是数值类型
+            if not pd.api.types.is_numeric_dtype(self.dataframe[column_name]):
+                QMessageBox.warning(None, "错误", f"列 '{column_name}' 不是数值类型，无法进行标准化")
+                return False
+            
+            if actual_method == 'min_max':
+                # 最小-最大缩放
+                col_min = self.dataframe[column_name].min()
+                col_max = self.dataframe[column_name].max()
+                if col_max == col_min:
+                    QMessageBox.warning(None, "错误", f"列 '{column_name}' 的最大值和最小值相同，无法进行最小-最大缩放")
+                    return False
+                self.dataframe[column_name] = (self.dataframe[column_name] - col_min) / (col_max - col_min) * (max_val - min_val) + min_val
+                
+            elif actual_method == 'z_score':
+                # Z-score标准化
+                col_mean = self.dataframe[column_name].mean()
+                col_std = self.dataframe[column_name].std()
+                if col_std == 0:
+                    QMessageBox.warning(None, "错误", f"列 '{column_name}' 的标准差为0，无法进行Z-score标准化")
+                    return False
+                self.dataframe[column_name] = (self.dataframe[column_name] - col_mean) / col_std
+                
+            elif actual_method == 'decimal_scaling':
+                # 小数定标标准化
+                max_val = max(abs(self.dataframe[column_name].min()), abs(self.dataframe[column_name].max()))
+                j = len(str(int(max_val))) if max_val != 0 else 1
+                self.dataframe[column_name] = self.dataframe[column_name] / (10 ** j)
+                
+            elif actual_method == 'log':
+                # 对数变换
+                if (self.dataframe[column_name] <= 0).any():
+                    QMessageBox.warning(None, "错误", f"列 '{column_name}' 包含非正值，无法进行对数变换")
+                    return False
+                self.dataframe[column_name] = np.log(self.dataframe[column_name])
+            
+            self.update_stats()
+            data_signals.data_modified.emit(
+                self.dataframe.to_numpy().copy(), 
+                self.get_table_headers().copy()
+            )
+            return True
+            
+        except Exception as e:
+            QMessageBox.warning(None, "错误", f"数据标准化失败: {e}")
+            return False

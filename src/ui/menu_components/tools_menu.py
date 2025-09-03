@@ -9,6 +9,7 @@ from src.ui.dialogs.filter_dialog import FilterDialog
 from src.ui.dialogs.preferences_dialog import PreferencesDialog
 from src.ui.dialogs.sort_dialog import SortDialog
 from src.ui.dialogs.data_clean_dialog import DataCleanDialog
+from src.ui.dialogs.data_convert_dialog import DataConvertDialog
 
 class ToolsMenu(QMenu):
     def __init__(self, parent=None, main_window=None):
@@ -143,7 +144,17 @@ class ToolsMenu(QMenu):
     def convert_data(self):
         """数据转换"""
         # 实现数据转换逻辑
-        pass
+        current_container = self.main_window.plot_area.get_current_table_container()
+        data_convert_dialog = DataConvertDialog(current_container, self.main_window)
+        if not data_convert_dialog.hasError:
+            if data_convert_dialog.exec():  # 调用 exec() 方法显示对话框
+                if current_container.convert_data(data_convert_dialog.get_conversion_options()):  # 传递参数
+                    current_tab = self.main_window.plot_area.get_current_table_tab()
+                    if current_tab:
+                        current_tab.load_data()
+                        QMessageBox.information(self.main_window, "提示", "数据已转换！")
+                else:
+                    QMessageBox.warning(self.main_window, "警告", "转换失败！")
 
     # 偏好相关
     def open_preferences(self):
